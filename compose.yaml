@@ -13,8 +13,9 @@ services:
       # keys created directly at voyageai.com need https://api.voyageai.com/v1/embeddings.
       VOYAGE_API_KEY: ${VOYAGE_API_KEY:?set VOYAGE_API_KEY in .env}
       VOYAGE_EMBEDDING_PROVIDER_ENDPOINT: ${VOYAGE_EMBEDDING_PROVIDER_ENDPOINT:-https://ai.mongodb.com/v1/embeddings}
+    # Loopback only: Atlas Local runs without auth, so don't expose it to the LAN.
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo-data:/data/db
       - mongo-config:/data/configdb
@@ -32,7 +33,18 @@ services:
       PORT: "8000"
       MONGODB_URI: mongodb://mongo:27017/?directConnection=true
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    # /health pings Mongo (503 when unreachable). The slim image has no curl.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
     depends_on:
       mongo:
         condition: service_healthy

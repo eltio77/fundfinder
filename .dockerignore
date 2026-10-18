@@ -1,4 +1,7 @@
-.env
+# Never send secrets to the build context: `COPY web/ ./` would otherwise pick up
+# web/.env* (and Vite would inline any VITE_* values into the public bundle).
+**/.env
+**/.env.*
 .venv
 .git
 .github
