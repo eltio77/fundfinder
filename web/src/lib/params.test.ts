@@ -35,3 +35,34 @@ describe("AI interpretation mode in the URL", () => {
     expect(readQuery(new URLSearchParams(url)).ai).toBe(true);
   });
 });
+
+describe("untrusted URL values", () => {
+  it("falls back to defaults for out-of-range or non-integer limit and nc", () => {
+    for (const bad of ["0", "-5", "2.5", "101", "1e9", "abc"]) {
+      expect(readQuery(new URLSearchParams(`q=x&limit=${bad}`)).settings.limit).toBe(10);
+    }
+    for (const bad of ["0", "-5", "2.5", "10001", "1e9", "abc"]) {
+      expect(readQuery(new URLSearchParams(`q=x&nc=${bad}`)).settings.numCandidates).toBeNull();
+    }
+    const { settings } = readQuery(new URLSearchParams("q=x&limit=50&nc=1000"));
+    expect(settings).toMatchObject({ limit: 50, numCandidates: 1000 });
+  });
+
+  it("drops a negative cost cap", () => {
+    expect(readQuery(new URLSearchParams("q=x&ocf_max=-1")).filters.ocf_max).toBeUndefined();
+    expect(readQuery(new URLSearchParams("q=x&ocf_max=0.25")).filters.ocf_max).toBe(0.25);
+  });
+
+  it("caps the query at the API's maximum length", () => {
+    expect(readQuery(new URLSearchParams({ q: "a".repeat(5000) })).q).toHaveLength(2000);
+  });
+
+  it("dedupes, drops empty and caps ignored keys", () => {
+    const p = new URLSearchParams();
+    for (const k of ["a", "a", "", "b"]) p.append("ignore", k);
+    expect(readQuery(p).ignore).toEqual(["a", "b"]);
+    const many = new URLSearchParams();
+    for (let i = 0; i < 200; i++) many.append("ignore", `k${i}`);
+    expect(readQuery(many).ignore).toHaveLength(50);
+  });
+});

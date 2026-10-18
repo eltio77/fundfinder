@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 
 import { ApiError, type Meta } from "./api";
 
-const MAX_RATE_LIMIT_RETRIES = 3;
+export const MAX_RATE_LIMIT_RETRIES = 3;
 const DEFAULT_RETRY_S = 20;
 
 export interface RequestState<T> {
@@ -46,6 +46,8 @@ export function useRequest<T>(
       fnRef
         .current(ctrl.signal)
         .then((d) => {
+          // A superseded request must never overwrite the newer one's result.
+          if (ctrl.signal.aborted) return;
           setData(d);
           setLoading(false);
         })

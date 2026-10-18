@@ -2,6 +2,18 @@ import type { Filters, SearchSettings, Sort } from "./api";
 
 export const DEFAULT_LIMIT = 10;
 
+// Mirror the API's bounds (fundfinder/routes/api.py, search.py) so a hand-edited or
+// shared URL falls back to defaults instead of sending values the API rejects (422).
+const MAX_QUERY_LENGTH = 2000;
+const MAX_LIMIT = 100;
+const MAX_NUM_CANDIDATES = 10_000;
+const MAX_IGNORED = 50;
+
+/** A whole number in [min, max], else undefined. */
+function intIn(v: number | undefined, min: number, max: number): number | undefined {
+  return v !== undefined && Number.isInteger(v) && v >= min && v <= max ? v : undefined;
+}
+
 /** Read filters + settings from URL params (search page state lives in the URL). */
 export function readQuery(params: URLSearchParams): {
   q: string;
@@ -21,20 +33,21 @@ export function readQuery(params: URLSearchParams): {
   };
   const passive = params.get("is_passive");
   const sort = params.get("sort");
+  const ocfMax = num("ocf_max");
   return {
-    q: params.get("q") ?? "",
+    q: (params.get("q") ?? "").slice(0, MAX_QUERY_LENGTH),
     sort: sort === "relevance" || sort === "cost" || sort === "cost_desc" ? sort : "auto",
-    ignore: params.getAll("ignore"),
+    ignore: [...new Set(params.getAll("ignore").filter(Boolean))].slice(0, MAX_IGNORED),
     ai: params.get("intent") === "llm",
     filters: {
       asset_class: params.get("asset_class") || undefined,
       ia_sector: params.get("ia_sector") || undefined,
-      ocf_max: num("ocf_max"),
+      ocf_max: ocfMax !== undefined && ocfMax >= 0 ? ocfMax : undefined,
       is_passive: passive === "true" ? true : passive === "false" ? false : undefined,
     },
     settings: {
-      limit: num("limit") ?? DEFAULT_LIMIT,
-      numCandidates: num("nc") ?? null,
+      limit: intIn(num("limit"), 1, MAX_LIMIT) ?? DEFAULT_LIMIT,
+      numCandidates: intIn(num("nc"), 1, MAX_NUM_CANDIDATES) ?? null,
       exact: params.get("exact") === "true",
     },
   };

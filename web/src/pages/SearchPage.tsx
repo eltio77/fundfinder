@@ -9,7 +9,7 @@ import { SimpleFilters } from "../components/SimpleFilters";
 import { Understanding } from "../components/Understanding";
 import { TestSets } from "../components/TestSets";
 import { ErrorNote, Skeleton, Tabs, Toggle } from "../components/ui";
-import { api, type Filters, type SearchSettings, type Sort } from "../lib/api";
+import { api, type Filters, type SearchSettings, type Sort, withAiFallback } from "../lib/api";
 import { ms } from "../lib/format";
 import { useExpert, useMeta, useRequest } from "../lib/hooks";
 import { readQuery, writeQuery } from "../lib/params";
@@ -67,7 +67,7 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
 
   const key = q ? JSON.stringify([q, sort, ignore, ai, filters, settings]) : null;
   const { data, error, loading, retryIn, reload } = useRequest(key, (signal) =>
-    api.search(q, sort, ignore, ai, filters, settings, signal),
+    withAiFallback(ai, (useAi) => api.search(q, sort, ignore, useAi, filters, settings, signal)),
   );
   const orderNote = data ? ORDER_NOTE[data.sort][sort === "auto" ? "auto" : "chosen"] : "";
   const clusters = useRequest(expert ? "clusters" : null, (signal) => api.clusters(signal));
@@ -131,7 +131,7 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
               : "Off: searches your words as written."}
           </span>
         </div>
-        <div className="chips" aria-label="Example searches">
+        <div className="chips" role="group" aria-label="Example searches">
           <span className="chips-label">Try</span>
           {EXAMPLES.filter((ex) => ex.q !== q).map((ex) => (
             <button key={ex.q} type="button" className="chip" onClick={() => go(ex.q, filters, settings)}>

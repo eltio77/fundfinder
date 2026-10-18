@@ -1,5 +1,6 @@
 import type { ClusterMember } from "../lib/api";
 import { clusterName } from "../lib/format";
+import { fundPath } from "../lib/router";
 import { Link } from "./ui";
 
 const GROUPS = [
@@ -29,7 +30,7 @@ export function TestSets({ clusters }: { clusters: Record<string, ClusterMember[
                 .filter(([c]) => c.startsWith(g.prefix))
                 .map(([c, members]) => (
                   <li key={c}>
-                    <Link to={`/fund/${members[0].id}`}>{clusterName(c)}</Link>
+                    <Link to={fundPath(members[0].id)}>{clusterName(c)}</Link>
                     <span className="muted small">{members.length}</span>
                   </li>
                 ))}

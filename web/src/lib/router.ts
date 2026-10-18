@@ -15,10 +15,17 @@ function subscribe(onChange: () => void): () => void {
 
 const snapshot = () => window.location.pathname + window.location.search;
 
+/** Path of a fund page; ids come from the API, so encode them like any other data. */
+export const fundPath = (id: string) => `/fund/${encodeURIComponent(id)}`;
+
+/** True when the previous history entry is a page of this app (we pushed this one). */
+export const canGoBackInApp = (): boolean =>
+  (window.history.state as { inApp?: boolean } | null)?.inApp === true;
+
 export function navigate(to: string, { replace = false } = {}): void {
   if (to === snapshot()) return;
-  if (replace) window.history.replaceState(null, "", to);
-  else window.history.pushState(null, "", to);
+  if (replace) window.history.replaceState(window.history.state, "", to);
+  else window.history.pushState({ inApp: true }, "", to);
   window.dispatchEvent(new Event(NAV_EVENT));
   if (!replace) window.scrollTo({ top: 0 });
 }
@@ -33,7 +40,14 @@ export function matchRoute(url: string): Route {
   const params = new URLSearchParams(query);
   if (path === "/" || path === "") return { name: "search", params };
   const m = /^\/fund\/([^/]+)\/?$/.exec(path);
-  if (m) return { name: "fund", id: decodeURIComponent(m[1]), params };
+  if (m) {
+    try {
+      return { name: "fund", id: decodeURIComponent(m[1]), params };
+    } catch {
+      // Malformed escape (e.g. /fund/%E0) would otherwise throw during render.
+      return { name: "notFound" };
+    }
+  }
   return { name: "notFound" };
 }
 

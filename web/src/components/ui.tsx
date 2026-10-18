@@ -1,6 +1,7 @@
 import type { AnchorHTMLAttributes, CSSProperties, ReactNode } from "react";
 
 import { ApiError } from "../lib/api";
+import { MAX_RATE_LIMIT_RETRIES } from "../lib/hooks";
 import { navigate } from "../lib/router";
 
 export function Link({
@@ -82,13 +83,14 @@ export function Tabs<T extends string>({
   label: string;
 }) {
   return (
-    <div className="tabs" role="tablist" aria-label={label}>
+    // A segmented control, not ARIA tabs: there are no tab panels and no arrow-key
+    // roving focus, so tab roles would promise screen readers behaviour that isn't there.
+    <div className="tabs" role="group" aria-label={label}>
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
-          role="tab"
-          aria-selected={o.value === value}
+          aria-pressed={o.value === value}
           className={o.value === value ? "on" : ""}
           onClick={() => onChange(o.value)}
         >
@@ -121,13 +123,12 @@ export function ErrorNote({
   if (error instanceof ApiError && error.rateLimited) {
     return (
       <div className="note note-wait" role="status">
-        <span className="pill pill-amber">Rate limited</span>
-        <p>
-          Voyage embeds query text at search time. Keys without a payment method allow 3 requests
-          a minute.
-        </p>
+        <span className="pill pill-amber">Busy</span>
+        <p>Lots of searches right now, so we're pausing briefly before trying again.</p>
         <p className="note-foot">
-          {retryIn !== null ? `Retrying in ${retryIn}s…` : "Gave up after 3 tries."}
+          {retryIn !== null
+            ? `Retrying in ${retryIn}s…`
+            : `Still busy after ${MAX_RATE_LIMIT_RETRIES} tries. Wait a minute, then try again.`}
           {retryIn === null && (
             <button type="button" className="btn-ghost" onClick={onRetry}>
               Try again
@@ -167,6 +168,7 @@ export function Toggle({
     <label className={`toggle ${disabled ? "is-disabled" : ""}`} title={title}>
       <input
         type="checkbox"
+        role="switch"
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
