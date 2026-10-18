@@ -1,3 +1,6 @@
+import json
+import time
+
 import pytest
 
 from fundfinder.search import Filters
@@ -37,10 +40,14 @@ def test_cost_cap(q, ocf_max, text):
         "no more than 0.5% in cash",
         "global equity under 0.2",  # unitless with no cost word
         "FTSE 100 tracker",
+        "fees under 101%",  # over 100% is never an annual charge
+        "fees under " + "9" * 400 + "%",  # float() of this is inf
     ],
 )
 def test_no_cost_cap(q):
-    assert interpret(q)[1].ocf_max is None
+    filters = interpret(q)[1]
+    assert filters.ocf_max is None
+    json.dumps(filters.model_dump(), allow_nan=False)  # the API echoes filters as JSON
 
 
 @pytest.mark.parametrize(
@@ -54,6 +61,8 @@ def test_no_cost_cap(q):
         ("stock picking in Japan", False),
         ("not an index fund", False),
         ("index-linked gilts", None),  # "index-linked" is a bond type
+        ("not index-linked gilts", None),  # ...so negating it says nothing about trackers
+        ("bonds but not index linked", None),
         ("active fund or tracker", None),  # both: leave it
         ("Japanese companies that are reforming", None),
     ],
@@ -150,3 +159,23 @@ def test_plan_explicit_filters_win_and_ignore_drops():
     assert p.filters.ocf_max is None and p.filters.is_passive is True
     assert not p.exclusions
     assert [a.key for a in p.applied] == ["is_passive"]
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
+        "not" + " " * 1997,
+        "not tech" + " or tech" * 249,
+        "not tech" + " , " * 664 + "x",
+        "fees of " * 250,
+        "tracks the " + "a " * 994,
+        "no us " * 333,
+        "1 % in " * 285,
+    ],
+)
+def test_long_adversarial_queries_stay_fast(q):
+    # Guards against catastrophic regex backtracking at the API's 2000-char limit.
+    # These take ~1-4 ms today; the bound is loose so slow CI doesn't flake.
+    started = time.perf_counter()
+    interpret(q[:2000])
+    assert time.perf_counter() - started < 0.5
