@@ -16,6 +16,9 @@ def keys(q: str) -> list[str]:
         ("OCF under 0.25 world equity", 0.25, "world equity"),
         ("japan funds costing less than 0.5 percent", 0.5, "japan funds"),
         ("UK bonds no more than 0.3% p.a.", 0.3, "UK bonds"),
+        ("funds under 0.1% in S&P", 0.1, "funds in S&P"),
+        ("trackers under 0.1% in the S&P 500", 0.1, "trackers in the S&P 500"),
+        ("under 0.2% in a FTSE 100 tracker", 0.2, "a FTSE 100 tracker"),
     ],
 )
 def test_cost_cap(q, ocf_max, text):
@@ -29,6 +32,9 @@ def test_cost_cap(q, ocf_max, text):
     [
         "under 50% in shares",  # an allocation, not a cost
         "less than 20% of the fund in bonds",
+        "under 1% in tech",
+        "under 2% in the US",
+        "no more than 0.5% in cash",
         "global equity under 0.2",  # unitless with no cost word
         "FTSE 100 tracker",
     ],

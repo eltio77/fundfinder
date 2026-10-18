@@ -109,10 +109,6 @@ COST_CAP = re.compile(
     rf"(?:(?P<pre>{_COST_WORD})\s+(?:of\s+)?)?{_CMP}\s*{_NUM}{_UNIT}?{_PER_YEAR}",
     re.IGNORECASE,
 )
-# Words right after a number that mean it's an allocation, not a cost.
-_ALLOCATION_AFTER = re.compile(
-    r"^\s*(?:in|of|shares|equit|bonds?|exposure|allocation)", re.IGNORECASE
-)
 
 
 def _alternation(patterns: dict) -> str:
@@ -124,6 +120,14 @@ _TERM = (
     r"|index|trackers?|passive)"
 )
 _SUFFIX = r"(?:\s+(?:funds?|stocks?|shares|companies|sectors?|exposure|names|heavy|focused))?"
+# Words right after a number that make it an allocation, not a cost: "50% in shares",
+# "20% of the fund", "10% in tech", "30% in the US". "0.1% in S&P" is still a cost:
+# an index name isn't something you hold a share *in* this sense.
+_ALLOCATION_AFTER = re.compile(
+    rf"^\s*(?:(?:in|of)\s+(?:the\s+)?(?:{_TERM}|fund|portfolio|assets?|cash)\b"
+    r"|shares|equit|bonds?|exposure|allocation)",
+    re.IGNORECASE,
+)
 NEGATION = re.compile(
     rf"(?:\b(?:but|and)\s+)?\b(?:not|no|excluding|exclude|except|without|avoid(?:ing)?|outside"
     rf"|ex|non)(?:\s+(?:the|any|an?|in)){{0,2}}[\s-]+(?P<terms>{_TERM}{_SUFFIX}"
@@ -215,7 +219,7 @@ def _tidy(text: str) -> str:
     text = re.sub(r"\s+", " ", text)
     text = re.sub(r"\s+([,.;:!?])", r"\1", text)
     # Connectors left dangling at either end ("global equity but", "with fees").
-    dangling = r"(?:but|and|with|or|that|which|is|are|has|have|fees?|charges?|costs?|ocf|,)"
+    dangling = r"(?:but|and|with|or|in|of|that|which|is|are|has|have|fees?|charges?|costs?|ocf|,)"
     for _ in range(3):
         text = re.sub(rf"^\s*{dangling}\b\s*|\s*\b{dangling}\s*[,.]?\s*$", "", text, flags=re.I)
     return text.strip(" ,.;:-")
