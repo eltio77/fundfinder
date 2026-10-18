@@ -19,7 +19,7 @@ export function readQuery(params: URLSearchParams): {
   const sort = params.get("sort");
   return {
     q: params.get("q") ?? "",
-    sort: sort === "relevance" || sort === "cost" ? sort : "auto",
+    sort: sort === "relevance" || sort === "cost" || sort === "cost_desc" ? sort : "auto",
     filters: {
       asset_class: params.get("asset_class") || undefined,
       ia_sector: params.get("ia_sector") || undefined,

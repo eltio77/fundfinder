@@ -1,6 +1,6 @@
 export type Mode = "text" | "exposure" | "both";
-/** "auto": the server puts the cheapest first when the query asks for low cost. */
-export type Sort = "auto" | "relevance" | "cost";
+/** "auto": the server orders by cost when the query asks for low or high cost. */
+export type Sort = "auto" | "relevance" | "cost" | "cost_desc";
 
 export interface Hit {
   id: string;

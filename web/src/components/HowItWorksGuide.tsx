@@ -17,7 +17,7 @@ const STEPS = [
   },
   {
     title: "Best matches first",
-    body: "You see the closest funds first. Ask for “low cost” or “cheapest” and those matches are shown cheapest first.",
+    body: "You see the closest funds first. Ask for “low cost” or “cheapest” and those matches are shown cheapest first; “highest cost” or “most expensive” puts the dearest first.",
   },
 ];
 
@@ -43,7 +43,7 @@ const TERMS = [
 const TIPS = [
   ["Name what it should hold", "“UK government bonds” works better than “a safe fund”."],
   ["Add a place or theme", "Japan, healthcare, emerging markets, technology."],
-  ["Say if cost matters", "“Low cost” or “cheapest” puts the cheapest matches first."],
+  ["Say if cost matters", "“Low cost” puts the cheapest matches first, “highest cost” the most expensive."],
   ["Narrow it down", "Use the filters under the search for fund type and cost."],
   ["Explore from a fund", "Open any result to see the funds most like it."],
 ];

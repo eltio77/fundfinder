@@ -12,5 +12,6 @@ describe("sort in the URL", () => {
     const url = writeQuery("cheap", {}, { limit: 10, numCandidates: null, exact: false }, "relevance");
     expect(readQuery(new URLSearchParams(url)).sort).toBe("relevance");
     expect(readQuery(new URLSearchParams("q=x&sort=price")).sort).toBe("auto");
+    expect(readQuery(new URLSearchParams("q=x&sort=cost_desc")).sort).toBe("cost_desc");
   });
 });

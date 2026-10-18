@@ -65,7 +65,7 @@ class SearchResponse(BaseModel):
     query: str | None = None
     fund_id: str | None = None
     mode: Mode | None = None
-    # Order of `results`: "cost" = ascending OCF, otherwise similarity.
+    # Order of `results`: "cost" = ascending OCF, "cost_desc" = descending, else similarity.
     sort: Sort = Sort.relevance
     limit: int
     num_candidates: int | None
@@ -104,7 +104,10 @@ async def search(
     params: Annotated[SearchParams, Depends(get_params)],
     sort: Annotated[
         Sort,
-        Query(description="auto: lowest annual cost first if the query asks for low cost"),
+        Query(
+            description="auto: by annual cost if the query asks for low cost (cheapest first) "
+            "or high cost (most expensive first), otherwise by match"
+        ),
     ] = Sort.auto,
 ) -> SearchResponse:
     """Semantic search: Atlas embeds `q` with Voyage and searches the `profile_auto` index."""
@@ -117,9 +120,9 @@ async def search(
         exact=params.exact,
     )
     order = resolve_sort(sort, q)
-    if order is Sort.cost:
+    if order in (Sort.cost, Sort.cost_desc):
         # Re-orders the best matches only; stable, so equal costs keep match order.
-        hits.sort(key=lambda h: h.ocf)
+        hits.sort(key=lambda h: h.ocf, reverse=order is Sort.cost_desc)
     return _response(params, filters, started, query=q, sort=order, results=hits)
 
 

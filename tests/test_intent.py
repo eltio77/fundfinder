@@ -1,6 +1,6 @@
 import pytest
 
-from fundfinder.intent import Sort, resolve_sort, wants_low_cost
+from fundfinder.intent import Sort, cost_intent, resolve_sort, wants_high_cost, wants_low_cost
 
 
 @pytest.mark.parametrize(
@@ -32,6 +32,35 @@ def test_detects_low_cost(q):
 )
 def test_ignores_other_queries(q):
     assert not wants_low_cost(q)
+    assert not wants_high_cost(q)
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
+        "high cost funds",
+        "highest cost equity",
+        "hightest cost",  # common typo
+        "Highest-cost active fund",
+        "higher fees",
+        "high charges",
+        "the most expensive tracker",
+        "priciest UK fund",
+    ],
+)
+def test_detects_high_cost(q):
+    assert wants_high_cost(q)
+    assert not wants_low_cost(q)
+
+
+@pytest.mark.parametrize("q", ["high yield bonds", "high income UK equity", "highly rated"])
+def test_high_without_cost_word_is_not_cost(q):
+    assert cost_intent(q) is None
+
+
+def test_first_mention_wins_when_both():
+    assert cost_intent("low cost, not expensive") is Sort.cost
+    assert cost_intent("expensive rather than cheap") is Sort.cost_desc
 
 
 def test_resolve_sort():
@@ -39,3 +68,4 @@ def test_resolve_sort():
     assert resolve_sort(Sort.auto, "japan value") is Sort.relevance
     assert resolve_sort(Sort.relevance, "lowest cost tracker") is Sort.relevance
     assert resolve_sort(Sort.cost, "japan value") is Sort.cost
+    assert resolve_sort(Sort.auto, "highest cost japan") is Sort.cost_desc

@@ -146,11 +146,13 @@ max 10,000), `exact` (ENN instead of ANN), and filters `asset_class`, `ia_sector
 - `both` runs the two concurrently, each `2 x limit` deep, and fuses them with reciprocal rank
   fusion (k=60). Results then include each fund's `ranks` in the two lists.
 
-`/search` also takes `sort=auto|relevance|cost` (default `auto`). Similarity can't rank by
-price, so with `auto` a query that asks for low cost ("low cost", "lowest-cost", "low fees",
-"cheap", "cheapest", ...) gets its matches re-ordered by ascending OCF. Only the top `limit`
-matches are re-ordered: they're still the most relevant funds, shown cheapest first. "Low risk"
-and similar don't trigger it. The response's `sort` says which order was used.
+`/search` also takes `sort=auto|relevance|cost|cost_desc` (default `auto`). Similarity can't
+rank by price, so with `auto` a query that asks for low cost ("low cost", "lowest-cost", "low
+fees", "cheap", "cheapest", ...) gets its matches re-ordered by ascending OCF, and one that asks
+for high cost ("high cost", "highest cost", "higher fees", "most expensive", "priciest", ...)
+by descending OCF. Only the top `limit`
+matches are re-ordered: they're still the most relevant funds, shown cheapest first. "Low risk",
+"high yield" and similar don't trigger it. The response's `sort` says which order was used.
 
 The fund itself is excluded by requesting `limit + 1` and dropping it. Scores are Atlas
 `vectorSearchScore`, so cosine is reported as `(1 + cos) / 2`; in `both` mode the score is the RRF

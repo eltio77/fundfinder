@@ -23,6 +23,19 @@ const EXAMPLES = [
   { q: "artificial intelligence and chips", tone: "amber" },
 ];
 
+// Subtitle for the results order: "auto" when the server inferred it from the query.
+const ORDER_NOTE: Record<Exclude<Sort, "auto">, { auto: string; chosen: string }> = {
+  relevance: { auto: "Best matches first.", chosen: "Best matches first." },
+  cost: {
+    auto: "You asked for low cost, so the closest matches are shown cheapest first.",
+    chosen: "Closest matches, cheapest first.",
+  },
+  cost_desc: {
+    auto: "You asked for high cost, so the closest matches are shown most expensive first.",
+    chosen: "Closest matches, most expensive first.",
+  },
+};
+
 export function SearchPage({ params }: { params: URLSearchParams }) {
   const meta = useMeta();
   const expert = useExpert();
@@ -42,7 +55,7 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
   const { data, error, loading, retryIn, reload } = useRequest(key, (signal) =>
     api.search(q, sort, filters, settings, signal),
   );
-  const byCost = data?.sort === "cost";
+  const orderNote = data ? ORDER_NOTE[data.sort][sort === "auto" ? "auto" : "chosen"] : "";
   const clusters = useRequest(expert ? "clusters" : null, (signal) => api.clusters(signal));
 
   const submit = (e: FormEvent) => {
@@ -105,12 +118,7 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
                 <span className="muted">“{q}”</span>
               </h2>
               <p className="card-head-sub">
-                {byCost
-                  ? sort === "auto"
-                    ? "You asked for low cost, so the closest matches are shown cheapest first."
-                    : "Closest matches, cheapest first."
-                  : "Best matches first."}{" "}
-                Open a fund to see others like it.
+                {orderNote} Open a fund to see others like it.
                 {expert && data && !loading && (
                   <span className="mono">
                     {" "}
@@ -126,6 +134,7 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
                 options={[
                   { value: "relevance", label: "Best match" },
                   { value: "cost", label: "Lowest cost" },
+                  { value: "cost_desc", label: "Highest cost" },
                 ]}
                 onChange={(o) => go(q, filters, settings, true, o)}
               />

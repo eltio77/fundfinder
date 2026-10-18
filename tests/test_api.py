@@ -66,11 +66,20 @@ def test_low_cost_query_sorts_by_annual_cost(client, q):
     assert [h["id"] for h in body["results"]] == ["F3", "F2", "F4"]
 
 
+@pytest.mark.parametrize("q", ["highest cost global fund", "the most expensive fund"])
+def test_high_cost_query_sorts_by_annual_cost_descending(client, q):
+    body = client.get("/search", params={"q": q}).json()
+    assert body["sort"] == "cost_desc"
+    # Most expensive first; equal costs keep match order.
+    assert [h["id"] for h in body["results"]] == ["F2", "F4", "F3"]
+
+
 @pytest.mark.parametrize(
     ("q", "sort", "expected"),
     [
         ("lowest cost tracker", "relevance", ["F2", "F3", "F4"]),
         ("uk dividend", "cost", ["F3", "F2", "F4"]),
+        ("cheapest tracker", "cost_desc", ["F2", "F4", "F3"]),
     ],
 )
 def test_explicit_sort_overrides_detection(client, q, sort, expected):
