@@ -125,6 +125,9 @@ allowance still applies.
 
 ## API
 
+Interactive Swagger docs are at `/docs` (linked as **API** in the app's top bar), with the
+OpenAPI schema at `/openapi.json`.
+
 | Endpoint | Notes |
 |---|---|
 | `GET /health` | Pings Mongo; 503 if unreachable |

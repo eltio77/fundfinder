@@ -1,7 +1,7 @@
 import time
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel
 
 from fundfinder.db import FUNDS, get_db
@@ -28,10 +28,14 @@ def get_search(request: Request) -> FundSearch:
 
 
 def get_filters(
-    asset_class: str | None = None,
-    ia_sector: str | None = None,
-    ocf_max: Annotated[float | None, Query(ge=0)] = None,
-    is_passive: bool | None = None,
+    asset_class: Annotated[str | None, Query(description="e.g. Equity, Fixed Income")] = None,
+    ia_sector: Annotated[str | None, Query(description="IA sector, e.g. Global")] = None,
+    ocf_max: Annotated[
+        float | None, Query(ge=0, description="Maximum ongoing charge, in % a year")
+    ] = None,
+    is_passive: Annotated[
+        bool | None, Query(description="true = index funds, false = active")
+    ] = None,
 ) -> Filters:
     return Filters(
         asset_class=asset_class, ia_sector=ia_sector, ocf_max=ocf_max, is_passive=is_passive
@@ -45,7 +49,7 @@ class SearchParams(BaseModel):
 
 
 def get_params(
-    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 10,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT, description="Number of results")] = 10,
     num_candidates: Annotated[
         int | None,
         Query(ge=1, le=MAX_NUM_CANDIDATES, description="Default: 20 x limit"),
@@ -84,9 +88,17 @@ def _response(params: SearchParams, filters: Filters, started: float, **kw) -> S
     )
 
 
-@router.get("/search", response_model=SearchResponse)
+@router.get("/search", response_model=SearchResponse, tags=["search"])
 async def search(
-    q: Annotated[str, Query(min_length=1, max_length=2000)],
+    q: Annotated[
+        str,
+        Query(
+            min_length=1,
+            max_length=2000,
+            description="Plain-English description of the fund you want",
+            examples=["lowest cost global tracker"],
+        ),
+    ],
     search: Annotated[FundSearch, Depends(get_search)],
     filters: Annotated[Filters, Depends(get_filters)],
     params: Annotated[SearchParams, Depends(get_params)],
@@ -95,6 +107,7 @@ async def search(
         Query(description="auto: lowest annual cost first if the query asks for low cost"),
     ] = Sort.auto,
 ) -> SearchResponse:
+    """Semantic search: Atlas embeds `q` with Voyage and searches the `profile_auto` index."""
     started = time.perf_counter()
     hits = await search.search_text(
         q,
@@ -110,14 +123,18 @@ async def search(
     return _response(params, filters, started, query=q, sort=order, results=hits)
 
 
-@router.get("/funds/{fund_id}/similar", response_model=SearchResponse)
+@router.get("/funds/{fund_id}/similar", response_model=SearchResponse, tags=["search"])
 async def similar(
-    fund_id: str,
+    fund_id: Annotated[str, Path(examples=["F0001"])],
     search: Annotated[FundSearch, Depends(get_search)],
     filters: Annotated[Filters, Depends(get_filters)],
     params: Annotated[SearchParams, Depends(get_params)],
-    mode: Mode = Mode.both,
+    mode: Annotated[
+        Mode,
+        Query(description="text: description · exposure: holdings mix · both: RRF fusion"),
+    ] = Mode.both,
 ) -> SearchResponse:
+    """Funds most like this one, excluding itself."""
     started = time.perf_counter()
     hits = await search.similar(
         fund_id,
@@ -132,10 +149,12 @@ async def similar(
     return _response(params, filters, started, fund_id=fund_id, mode=mode, results=hits)
 
 
-@router.get("/funds/{fund_id}")
+@router.get("/funds/{fund_id}", tags=["funds"])
 async def get_fund(
-    fund_id: str, search: Annotated[FundSearch, Depends(get_search)]
+    fund_id: Annotated[str, Path(examples=["F0001"])],
+    search: Annotated[FundSearch, Depends(get_search)],
 ) -> dict[str, Any]:
+    """One fund: facts, holdings, sector/region/asset weights and exposure vector."""
     fund = await search.get_fund(fund_id)
     if fund is None:
         raise HTTPException(404, f"fund {fund_id} not found")
@@ -143,7 +162,7 @@ async def get_fund(
     return fund
 
 
-@router.get("/meta")
+@router.get("/meta", tags=["reference"])
 async def meta(
     request: Request, search: Annotated[FundSearch, Depends(get_search)]
 ) -> dict[str, Any]:
@@ -165,7 +184,7 @@ async def meta(
     }
 
 
-@router.get("/clusters")
+@router.get("/clusters", tags=["reference"])
 async def clusters(
     search: Annotated[FundSearch, Depends(get_search)],
 ) -> dict[str, list[dict[str, str]]]:

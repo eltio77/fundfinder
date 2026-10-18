@@ -175,6 +175,23 @@ p {
   gap: 16px;
   margin-left: auto;
 }
+.nav-api {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-inner);
+  background: var(--panel);
+  color: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.nav-api:hover {
+  border-color: var(--line-2);
+}
 .icon-btn {
   display: grid;
   place-items: center;

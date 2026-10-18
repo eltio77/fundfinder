@@ -1,4 +1,4 @@
-import { IconMoon, IconSun, Logo } from "./components/Icons";
+import { IconArrowUpRight, IconMoon, IconSun, Logo } from "./components/Icons";
 import { Link, Toggle } from "./components/ui";
 import { api } from "./lib/api";
 import { ExpertContext, MetaContext, usePersistentFlag, useRequest, useTheme } from "./lib/hooks";
@@ -32,6 +32,9 @@ export function App() {
                   className={`status-dot ${apiUp === null ? "" : apiUp ? "up" : "down"}`}
                   title={apiUp === null ? "Connecting" : apiUp ? "Connected" : "API unavailable"}
                 />
+                <a className="nav-api" href="/docs" target="_blank" rel="noreferrer" title="Swagger API docs">
+                  API <IconArrowUpRight width={14} height={14} />
+                </a>
                 <Toggle checked={expert} onChange={setExpert}>
                   Expert mode
                 </Toggle>
@@ -62,11 +65,6 @@ export function App() {
 
             <footer className="foot">
               <span>Prototype with synthetic data. Not investment information or advice.</span>
-              {expert && (
-                <a href="/docs" target="_blank" rel="noreferrer">
-                  API docs
-                </a>
-              )}
             </footer>
           </div>
         </div>

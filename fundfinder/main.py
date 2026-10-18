@@ -14,6 +14,24 @@ from fundfinder.routes.web import WEB_DIST, mount_web
 
 log = logging.getLogger("fundfinder")
 
+API_DESCRIPTION = """
+Similarity search over UK funds with MongoDB Atlas Vector Search.
+
+- **Text** similarity: Atlas embeds each fund's description (Voyage `voyage-4`, autoEmbed).
+- **Exposure** similarity: cosine over a 26-number vector of sector, region and asset weights.
+- **Both**: reciprocal rank fusion (k=60) of the two.
+
+All search endpoints take `limit`, `num_candidates` (ANN breadth, default 20 x limit), `exact`
+(exhaustive search) and filters. Data is synthetic. [Back to the app](/)
+"""
+
+OPENAPI_TAGS = [
+    {"name": "search", "description": "Find funds by description or by similarity to a fund"},
+    {"name": "funds", "description": "Fund details"},
+    {"name": "reference", "description": "Filter options and evaluation test sets"},
+    {"name": "ops", "description": "Health check"},
+]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -31,7 +49,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app(web_dist: Path | None = WEB_DIST) -> FastAPI:
     """web_dist=None gives an API-only app."""
-    app = FastAPI(title="Fund Finder", lifespan=lifespan)
+    app = FastAPI(
+        title="Fund Finder API",
+        version="0.1.0",
+        description=API_DESCRIPTION,
+        openapi_tags=OPENAPI_TAGS,
+        lifespan=lifespan,
+        swagger_ui_parameters={"tryItOutEnabled": True, "displayRequestDuration": True},
+    )
     app.include_router(health.router)
     app.include_router(api.router)
     if web_dist is not None:
