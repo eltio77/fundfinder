@@ -166,7 +166,7 @@ to drop them, or `interpret=false` to turn this off. See
 [docs/how-it-works.md](docs/how-it-works.md#step-1-query-understanding).
 
 With `intent=llm` (the app's **Interpret with AI** toggle, off by default), Claude reads the query
-instead: it fixes typos and turns vague wording into fund language, so "chep well known Uk"
+instead: it fixes typos and turns vague wording into fund language, so "cheap well known Uk"
 becomes FTSE 100 index trackers, cheapest first. The response adds a plain-English `summary`.
 This needs `ANTHROPIC_API_KEY`. If the call fails, search falls back to the standard reading and
 says so in `interpretation.notice`.

@@ -252,7 +252,7 @@ The rules above only read what is said explicitly. With `intent=llm` (the **Inte
 toggle under the search box, off by default), `fundfinder/llm_intent.py` asks Claude
 (`claude-haiku-5-5` by default, set with `INTENT_MODEL`) to read the query instead. It can:
 
-- fix typos ("chep" means cheap);
+- fix typos and misspellings;
 - turn vague or colloquial wording into fund language ("well known UK companies" means the FTSE
   100; "safe" points to gilts);
 - pick an index the person clearly means, and keep only funds tracking it. This matters because
@@ -260,7 +260,7 @@ toggle under the search box, off by default), `fundfinder/llm_intent.py` asks Cl
   can't separate them.
 
 ```text
-"chep well known Uk"
+"cheap well known Uk"
   -> searched for: "UK large companies index fund tracking the FTSE 100 Index"
   -> Index funds only · Only share (equity) funds · Tracks the FTSE 100 · cheapest first
   -> "Low-cost index funds that track the FTSE 100, the UK's 100 biggest companies, cheapest first."

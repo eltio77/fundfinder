@@ -193,7 +193,7 @@ def test_search_llm_intent(fake):
     fake.facets = facets
     llm = FakeLlm()
     with _llm_client(fake, llm) as c:
-        body = c.get("/search", params={"q": "chep well known Uk", "intent": "llm"}).json()
+        body = c.get("/search", params={"q": "cheap well known Uk", "intent": "llm"}).json()
         assert body["interpretation"]["source"] == "llm"
         assert body["interpretation"]["summary"].startswith("Cheap FTSE 100")
         assert fake.calls[0][1] == "UK large companies index fund tracking the FTSE 100"
@@ -204,7 +204,7 @@ def test_search_llm_intent(fake):
         # An explicit sort and the user's own filters still win.
         body = c.get(
             "/search",
-            params={"q": "chep well known Uk", "intent": "llm", "sort": "relevance",
+            params={"q": "cheap well known Uk", "intent": "llm", "sort": "relevance",
                     "is_passive": "false"},
         ).json()  # fmt: skip
         assert body["sort"] == "relevance"

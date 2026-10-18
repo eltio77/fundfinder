@@ -127,7 +127,7 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
           </Toggle>
           <span className="search-mode-hint">
             {ai && aiAvailable
-              ? "Reads what you mean, e.g. “chep well known UK” → cheap FTSE 100 trackers."
+              ? "Reads what you mean, e.g. “cheap well known UK” → cheap FTSE 100 trackers."
               : "Off: searches your words as written."}
           </span>
         </div>

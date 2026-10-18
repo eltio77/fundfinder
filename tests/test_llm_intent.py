@@ -56,7 +56,7 @@ def interpreter(**kw) -> tuple[LlmInterpreter, FakeMessages]:
 
 def test_reads_vague_query_into_a_plan():
     llm, messages = interpreter()
-    r = asyncio.run(llm.read("chep well known Uk", VOCAB))
+    r = asyncio.run(llm.read("cheap well known Uk", VOCAB))
     assert r.text.startswith("UK large companies index fund tracking the FTSE 100")
     assert r.filters.is_passive is True and r.filters.asset_class == "Equity"
     assert r.sort is Sort.cost
@@ -66,14 +66,14 @@ def test_reads_vague_query_into_a_plan():
     call = messages.calls[0]
     assert call["model"] == "claude-test"
     assert call["tool_choice"] == {"type": "tool", "name": TOOL_NAME}
-    assert "<query>chep well known Uk</query>" in call["messages"][0]["content"]
+    assert "<query>cheap well known Uk</query>" in call["messages"][0]["content"]
     assert "FTSE 100 Index" in call["messages"][0]["content"]  # vocabulary is offered
 
 
 def test_caches_per_normalised_query():
     llm, messages = interpreter()
-    asyncio.run(llm.read("chep well known Uk", VOCAB))
-    asyncio.run(llm.read("  CHEP well   known uk ", VOCAB))
+    asyncio.run(llm.read("cheap well known Uk", VOCAB))
+    asyncio.run(llm.read("  cheap well   known uk ", VOCAB))
     assert len(messages.calls) == 1
 
 

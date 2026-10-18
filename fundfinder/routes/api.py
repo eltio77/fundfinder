@@ -168,7 +168,7 @@ async def search(
         Intent,
         Query(
             description="rules: read explicit constraints (default). llm: Claude also reads "
-            "vague wording and typos, e.g. 'chep well known Uk' -> cheap FTSE 100 trackers"
+            "vague wording and typos, e.g. 'cheap well known Uk' -> cheap FTSE 100 trackers"
         ),
     ] = Intent.rules,
     llm: Annotated[LlmInterpreter | None, Depends(get_llm)] = None,
