@@ -99,56 +99,6 @@ export function Tabs<T extends string>({
   );
 }
 
-export function Stat({
-  label,
-  value,
-  foot,
-  trend,
-  style,
-}: {
-  label: string;
-  value: ReactNode;
-  foot: ReactNode;
-  trend?: ReactNode;
-  style?: CSSProperties;
-}) {
-  return (
-    <div className="stat" style={style}>
-      <span className="stat-label">{label}</span>
-      <span className="stat-value">{value}</span>
-      <span className="stat-foot">
-        <span>{foot}</span>
-        {trend && <span className="stat-trend">{trend}</span>}
-      </span>
-    </div>
-  );
-}
-
-export function IconButton({
-  label,
-  onClick,
-  href,
-  children,
-}: {
-  label: string;
-  onClick?: () => void;
-  href?: string;
-  children: ReactNode;
-}) {
-  if (href) {
-    return (
-      <a className="icon-btn" href={href} aria-label={label} title={label} target="_blank" rel="noreferrer">
-        {children}
-      </a>
-    );
-  }
-  return (
-    <button type="button" className="icon-btn" aria-label={label} title={label} onClick={onClick}>
-      {children}
-    </button>
-  );
-}
-
 export function Skeleton({ rows = 6 }: { rows?: number }) {
   return (
     <div className="skeleton" aria-busy="true" aria-label="Loading">

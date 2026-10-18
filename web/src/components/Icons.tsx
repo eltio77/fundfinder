@@ -24,27 +24,6 @@ export const IconSearch = (p: P) => (
   </svg>
 );
 
-export const IconLayers = (p: P) => (
-  <svg {...base(p)}>
-    <path d="m12 3 9 5-9 5-9-5 9-5Z" />
-    <path d="m3 13 9 5 9-5" />
-  </svg>
-);
-
-export const IconClock = (p: P) => (
-  <svg {...base(p)}>
-    <circle cx="12" cy="12" r="8.5" />
-    <path d="M12 7.5V12l3 2" />
-  </svg>
-);
-
-export const IconFlask = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M9.5 3h5M10 3v6.2L4.8 18a2 2 0 0 0 1.7 3h11a2 2 0 0 0 1.7-3L14 9.2V3" />
-    <path d="M7.5 14h9" />
-  </svg>
-);
-
 export const IconSun = (p: P) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="4" />
@@ -58,35 +37,9 @@ export const IconMoon = (p: P) => (
   </svg>
 );
 
-export const IconBook = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5v-15Z" />
-    <path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3" />
-  </svg>
-);
-
-export const IconSparkle = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M12 4v4M12 16v4M4 12h4M16 12h4" />
-    <path d="m12 8 1.2 2.8L16 12l-2.8 1.2L12 16l-1.2-2.8L8 12l2.8-1.2Z" fill="currentColor" stroke="none" />
-  </svg>
-);
-
 export const IconArrowUpRight = (p: P) => (
   <svg {...base(p)}>
     <path d="M7 17 17 7M8 7h9v9" />
-  </svg>
-);
-
-export const IconChevron = (p: P) => (
-  <svg {...base(p)}>
-    <path d="m9 6 6 6-6 6" />
-  </svg>
-);
-
-export const IconMenu = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M4 7h16M4 12h16M4 17h10" />
   </svg>
 );
 

@@ -41,22 +41,27 @@ To point the API or scripts at the local Docker Mongo instead of Atlas, prefix c
 `web/` is a React 19 + TypeScript app built with Vite. The production build is baked into the
 same Docker image and served by FastAPI at `/` and `/fund/{id}`. There's no frontend server.
 
-The layout is a dashboard: a sidebar and a white main panel with hairline cards. The palette is
-forest, cream, lilac, amber and coral, set in Geist, with light and dark themes.
+The app is designed for people who don't know fund jargon. The natural-language search is the
+centrepiece, set in a calm card layout (Geist; forest, cream, lilac and amber palette; light and
+dark themes).
 
-- **Sidebar:** quick search (⌘K), **Test sets** (the deliberate clusters, linking to a member of
-  each), recently viewed funds, and API status.
-- **Search:** free-text semantic search with filters and query settings (limit, numCandidates,
-  ANN/exact). Stat cards show results, latency and best score. A "search insight" card reads the
-  score distribution to say whether the top match is clear or the results are bunched. All state
-  lives in the URL, so searches can be shared.
-- **Fund page:** OCF and type, an exposure-mix card (top sector, region and asset weights as
-  proportional blocks), holdings, the objective, and a **mode-agreement gauge**: how many
-  neighbours the text and exposure modes share. Below that, the three modes side by side.
-  Hovering a fund highlights it in every column. "Only cheaper" filters on OCF, and "Test labels"
-  ticks designed siblings.
-- **Exposure fingerprint:** each 26-dim exposure vector drawn as a barcode (sectors | regions |
-  asset classes).
+- **Search:** describe a fund in plain English. Results show the fund type, annual cost and a
+  plain-language match strength ("Strong", "Good" or "Loose" match). Filters are fund type, asset
+  type and cost. All state lives in the URL, so searches can be shared.
+- **How it works:** the three methods (description, holdings, combined) shown as coloured blocks.
+- **Fund page:** the key facts, what it says it does, what it invests in, its biggest holdings, and
+  **Funds like this**. That list is the fused ranking, and each fund says why it matched:
+  "Similar description and holdings" (top 10 of both methods), "Similar description" or "Similar
+  holdings". "How we found these" turns the same information into a gauge. "Only cheaper" limits
+  the list to lower-cost funds.
+- **Expert mode** (switch in the top bar, remembered per browser) adds the technical layer:
+  - scores, ranks and exposure fingerprints
+  - limit, numCandidates and ANN/exact settings
+  - an IA sector filter
+  - test sets and designed-sibling counts
+  - a side-by-side comparison of the three methods
+- **Fewer Voyage calls:** a normal fund page makes one Voyage call (fused mode). The comparison
+  view adds one more, and only when it's switched on.
 - **Rate limits:** a request throttled by Voyage (HTTP 429) retries itself with a visible
   countdown.
 

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { ApiError, type ClusterMember, type Meta } from "./api";
+import { ApiError, type Meta } from "./api";
 
 const MAX_RATE_LIMIT_RETRIES = 3;
 const DEFAULT_RETRY_S = 20;
@@ -127,27 +127,6 @@ function writeJson(name: string, value: unknown): void {
   }
 }
 
-const RECENT_KEY = "ff.recent";
-const RECENT_MAX = 5;
-const RECENT_EVENT = "fundfinder:recent";
-
-/** Recently opened funds (per browser), newest first. */
-export function useRecent(): ClusterMember[] {
-  const [items, setItems] = useState<ClusterMember[]>(() => readJson(RECENT_KEY, []));
-  useEffect(() => {
-    const sync = () => setItems(readJson(RECENT_KEY, []));
-    window.addEventListener(RECENT_EVENT, sync);
-    return () => window.removeEventListener(RECENT_EVENT, sync);
-  }, []);
-  return items;
-}
-
-export function rememberFund(fund: ClusterMember): void {
-  const prev = readJson<ClusterMember[]>(RECENT_KEY, []).filter((f) => f.id !== fund.id);
-  writeJson(RECENT_KEY, [{ id: fund.id, name: fund.name }, ...prev].slice(0, RECENT_MAX));
-  window.dispatchEvent(new Event(RECENT_EVENT));
-}
-
 export type Theme = "light" | "dark";
 
 /** Explicit theme choice wins; otherwise follow the OS. */
@@ -169,3 +148,6 @@ export function useTheme(): [Theme, () => void] {
   }, []);
   return [theme, toggle];
 }
+
+export const ExpertContext = createContext(false);
+export const useExpert = () => useContext(ExpertContext);

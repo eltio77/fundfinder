@@ -85,3 +85,37 @@ export function intensities(vec: number[]): number[] {
   const max = Math.max(...vec, 0);
   return max > 0 ? vec.map((v) => v / max) : vec.map(() => 0);
 }
+
+export type Strength = "strong" | "good" | "weak";
+
+/** Plain-language match strength for a single-method score (Atlas cosine 0.5..1). */
+export function strength(score: number): Strength {
+  const fill = (score - 0.5) * 2;
+  return fill >= 0.45 ? "strong" : fill >= 0.28 ? "good" : "weak";
+}
+
+export const STRENGTH_LABEL: Record<Strength, string> = {
+  strong: "Strong match",
+  good: "Good match",
+  weak: "Loose match",
+};
+
+/** Why a fused result was matched, from its ranks in the two underlying lists.
+ *  "Both" only counts when the fund is in the top `depth` of each list (the lists
+ *  themselves are fetched deeper, so mere presence in both says little). */
+export function matchReason(
+  ranks: { text: number | null; exposure: number | null } | null,
+  depth: number,
+): { label: string; strength: Strength; both: boolean } {
+  if (!ranks) return { label: "Similar fund", strength: "good", both: false };
+  const t = ranks.text !== null && ranks.text <= depth ? ranks.text : null;
+  const e = ranks.exposure !== null && ranks.exposure <= depth ? ranks.exposure : null;
+  if (t !== null && e !== null)
+    return { label: "Similar description and holdings", strength: "strong", both: true };
+  const byText = (ranks.text ?? Infinity) <= (ranks.exposure ?? Infinity);
+  return {
+    label: byText ? "Similar description" : "Similar holdings",
+    strength: t !== null || e !== null ? "good" : "weak",
+    both: false,
+  };
+}

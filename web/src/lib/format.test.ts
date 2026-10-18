@@ -9,7 +9,9 @@ import {
   pct,
   RRF_MAX,
   scoreFill,
+  matchReason,
   siblingStats,
+  strength,
 } from "./format";
 import { matchRoute } from "./router";
 
@@ -44,6 +46,25 @@ describe("format", () => {
   it("normalises intensities by max", () => {
     expect(intensities([0, 0.5, 0.25])).toEqual([0, 1, 0.5]);
     expect(intensities([0, 0])).toEqual([0, 0]);
+  });
+});
+
+describe("plain language", () => {
+  it("labels match strength", () => {
+    expect(strength(0.8)).toBe("strong");
+    expect(strength(0.66)).toBe("good");
+    expect(strength(0.55)).toBe("weak");
+  });
+
+  it("explains fused matches", () => {
+    expect(matchReason({ text: 2, exposure: 5 }, 10).label).toBe("Similar description and holdings");
+    expect(matchReason({ text: null, exposure: 1 }, 10).label).toBe("Similar holdings");
+    expect(matchReason({ text: 3, exposure: null }, 10).strength).toBe("good");
+    // In both lists, but outside the top 10 of one of them: name the stronger method.
+    const r = matchReason({ text: 4, exposure: 15 }, 10);
+    expect(r.both).toBe(false);
+    expect(r.label).toBe("Similar description");
+    expect(matchReason({ text: 14, exposure: 18 }, 10).strength).toBe("weak");
   });
 });
 

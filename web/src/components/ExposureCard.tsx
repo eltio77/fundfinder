@@ -10,7 +10,7 @@ type Tab = "sectors" | "regions" | "assets";
 const TABS: { value: Tab; label: string }[] = [
   { value: "sectors", label: "Sectors" },
   { value: "regions", label: "Regions" },
-  { value: "assets", label: "Assets" },
+  { value: "assets", label: "Asset types" },
 ];
 
 const SWATCHES = ["forest", "cream", "lilac"] as const;
@@ -36,16 +36,19 @@ export function ExposureCard({ fund }: { fund: Fund }) {
   return (
     <section className="card">
       <header className="card-head">
-        <h3>
-          Exposure mix{" "}
-          <span className="hint" title="Weights as a share of the whole portfolio">
-            <IconInfo width={15} height={15} />
-          </span>
-        </h3>
+        <div>
+          <h3>
+            What it invests in{" "}
+            <span className="hint" title="Share of the whole fund">
+              <IconInfo width={15} height={15} />
+            </span>
+          </h3>
+          <p className="card-head-sub">Its three biggest areas</p>
+        </div>
         <Tabs value={tab} options={TABS} onChange={setTab} label="Breakdown" />
       </header>
       {top.length === 0 ? (
-        <p className="empty">No {tab} exposure: this fund holds no equities or listed property.</p>
+        <p className="empty">Not applicable: this fund doesn't hold company shares.</p>
       ) : (
         <div className="mix">
           {top.map(([name, w], i) => (
@@ -58,7 +61,11 @@ export function ExposureCard({ fund }: { fund: Fund }) {
           ))}
         </div>
       )}
-      {other > 0.001 && <p className="mix-other">Other {tab}: {pct(other)}</p>}
+      {other > 0.001 && (
+        <p className="mix-other">
+          Everything else: {pct(other)}
+        </p>
+      )}
     </section>
   );
 }
