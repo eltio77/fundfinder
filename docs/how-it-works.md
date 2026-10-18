@@ -249,6 +249,16 @@ Design choices:
 - **Constraint-only queries** ("under 0.1%", "excluding tech, banks or energy") embed the neutral
   text "investment fund", because re-embedding the original would undo a negation.
 
+**Alternatives.** One embedding of "bonds or property" lands between the two and found only bond
+funds. So the first "A or B" (or "A, B or C", up to 4) in the embedded text is split, keeping the
+shared words: "UK or European equity" searches "UK equity" and "European equity". Each runs as
+its own vector search with the same filters, and the lists are interleaved by each fund's best
+rank: each side's best match, then each side's second, and so on (`fuse_alternatives` in
+`search.py`). Plain RRF isn't used here, because it would put a fund that is middling for both
+sides above the best match for each. Results keep their own similarity score. The split is shown
+as an **Any of: bonds · property** chip (key `any_of`); removing it searches the text as one, and
+`interpretation.alternatives` lists the texts searched.
+
 Sector and region exclusions can't be pre-filters, because the indexes filter only on
 `asset_class`, `ia_sector`, `ocf` and `is_passive`. So they're applied after the search, which
 fetches 3 × `limit` to still fill the page. If that leaves the page short, it looks 200 deep once.

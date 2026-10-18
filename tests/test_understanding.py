@@ -4,7 +4,7 @@ import time
 import pytest
 
 from fundfinder.search import Filters
-from fundfinder.understanding import NEUTRAL_TEXT, Exclusions, interpret, plan
+from fundfinder.understanding import NEUTRAL_TEXT, Exclusions, alternatives, interpret, plan
 
 
 def keys(q: str) -> list[str]:
@@ -233,3 +233,37 @@ def test_long_adversarial_queries_stay_fast(q):
     started = time.perf_counter()
     interpret(q[:2000])
     assert time.perf_counter() - started < 0.5
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("tech or healthcare", [("tech", "tech"), ("healthcare", "healthcare")]),
+        ("UK or European equity", [("UK", "UK equity"), ("European", "European equity")]),
+        ("income from bonds or dividends",
+         [("bonds", "income from bonds"), ("dividends", "income from dividends")]),
+        ("index funds tracking the S&P 500 or FTSE 100",
+         [("S&P 500", "index funds tracking the S&P 500"),
+          ("FTSE 100", "index funds tracking the FTSE 100")]),
+        ("tech, healthcare or energy",
+         [("tech", "tech"), ("healthcare", "healthcare"), ("energy", "energy")]),
+        ("either gold or energy", [("gold", "gold"), ("energy", "energy")]),
+        ("money market or cash funds",
+         [("money market", "money market funds"), ("cash", "cash funds")]),
+        ("equity or fixed income funds",
+         [("equity", "equity funds"), ("fixed income", "fixed income funds")]),
+        ("income funds or growth funds",
+         [("income funds", "income funds"), ("growth funds", "growth funds")]),
+        ("UK or Europe, lowest cost first",
+         [("UK", "UK, lowest cost first"), ("Europe", "Europe, lowest cost first")]),
+        ("global equity", []),
+        ("tech or tech", []),
+        ("tech or", []),
+    ],
+)  # fmt: skip
+def test_alternatives(text, expected):
+    assert [(a.name, a.text) for a in alternatives(text)] == expected
+
+
+def test_alternatives_cap_list_length():
+    assert len(alternatives("a, b, c, d, e or f")) == 4

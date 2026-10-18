@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from enum import StrEnum
@@ -19,9 +20,10 @@ from fundfinder.search import (
     Hit,
     Mode,
     default_num_candidates,
+    fuse_alternatives,
 )
 from fundfinder.taxonomy import ASSET_CLASS_BREAKDOWN, GICS_SECTORS, REGIONS
-from fundfinder.understanding import Exclusions, Plan, Understood, merge, plan
+from fundfinder.understanding import Exclusions, Plan, Understood, alternatives, merge, plan
 
 router = APIRouter()
 log = logging.getLogger("fundfinder")
@@ -94,6 +96,9 @@ def get_params(
 # more to still fill the page. If that still leaves the page short, look much
 # deeper once: "tech but not US" must get past every US-heavy tech fund.
 EXCLUSION_OVERFETCH = 3
+# Chip key for searching each side of "A or B" separately; pass in `ignore` to search
+# the text as one.
+ANY_OF = "any_of"
 EXCLUSION_DEEP_FETCH = 200
 
 
@@ -143,6 +148,9 @@ class Interpretation(BaseModel):
         description="Constraints read from the query; pass a key in `ignore` to drop it"
     )
     summary: str | None = Field(None, description="LLM only: how the query was read")
+    alternatives: list[str] = Field(
+        [], description="For 'A or B': each text searched on its own, results merged"
+    )
     notice: str | None = Field(None, description="E.g. why the LLM reading wasn't used")
 
 
@@ -249,17 +257,28 @@ async def search(
     else:
         p = Plan(text=q, filters=filters, exclusions=Exclusions(), applied=[])
     text, effective, exclusions, applied = p.text, p.filters, p.exclusions, p.applied
+    # "tech or healthcare": search each side and merge, so neither crowds out the other.
+    alts = alternatives(text) if interpret and ANY_OF not in ignore else []
+    if alts:
+        names = " · ".join(a.name for a in alts)
+        applied = [*applied, Understood(key=ANY_OF, label=f"Any of: {names}")]
 
     async def fetch_hits(fetch: int) -> list[Hit]:
-        return await search.search_text(
-            text,
-            limit=fetch,
-            num_candidates=None
-            if params.num_candidates is None and not exclusions
-            else max(params.num_candidates or default_num_candidates(params.limit), fetch),
-            filters=effective,
-            exact=params.exact,
+        lists = await asyncio.gather(
+            *(
+                search.search_text(
+                    t,
+                    limit=fetch,
+                    num_candidates=None
+                    if params.num_candidates is None and not exclusions
+                    else max(params.num_candidates or default_num_candidates(params.limit), fetch),
+                    filters=effective,
+                    exact=params.exact,
+                )
+                for t in ([a.text for a in alts] or [text])
+            )
         )
+        return lists[0] if len(lists) == 1 else fuse_alternatives(list(lists))[:fetch]
 
     def kept(found: list[Hit]) -> list[Hit]:
         return [
@@ -287,7 +306,12 @@ async def search(
         query=q,
         sort=order,
         interpretation=Interpretation(
-            source=source, text=text, applied=applied, summary=summary, notice=notice
+            source=source,
+            text=text,
+            applied=applied,
+            summary=summary,
+            notice=notice,
+            alternatives=[a.text for a in alts],
         ),
         results=hits,
     )

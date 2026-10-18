@@ -19,7 +19,8 @@ export function Understanding({
   onReset: () => void;
 }) {
   const expert = useExpert();
-  const { applied, text, source, summary, notice } = interpretation;
+  const { applied, text, source, summary, notice, alternatives = [] } = interpretation;
+  const searched = alternatives.length > 0 ? alternatives : [text];
   if (
     applied.length === 0 &&
     ignored.length === 0 &&
@@ -62,12 +63,16 @@ export function Understanding({
               : `${ignored.length} removed rules`}
           </button>
         )}
-        {(expert || source === "llm") && text !== q && (
+        {(expert || source === "llm") && searched.join() !== q && (
           <span
             className="understood-text mono"
-            title="Text sent for embedding"
+            title={
+              searched.length > 1
+                ? "Each text is searched on its own and the results merged"
+                : "Text sent for embedding"
+            }
           >
-            searched for: “{text}”
+            searched for: {searched.map((t) => `“${t}”`).join(" · ")}
           </span>
         )}
       </div>

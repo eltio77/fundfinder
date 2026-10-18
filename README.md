@@ -31,6 +31,8 @@ flowchart LR
      - one asset class ("bonds", "property")
      - negations ("not tech", "ex UK", "no bonds", "not commodities")
      - cost order ("cheapest", "most expensive")
+     - alternatives ("tech or healthcare", "UK or European equity"): each side is searched on
+       its own and the results interleaved, so one side can't crowd out the other
 
      Places and themes such as "Japan" or "healthcare" are left to the match.
    - **Interpret with AI (opt-in toggle):** Claude (`fundfinder/llm_intent.py`) reads the whole

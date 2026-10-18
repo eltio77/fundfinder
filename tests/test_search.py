@@ -164,6 +164,20 @@ def test_fuse_marks_missing_ranks():
     }
 
 
+def test_fuse_alternatives_interleaves_and_keeps_best_score():
+    from fundfinder.search import Hit, fuse_alternatives
+
+    def h(fid: str, score: float) -> Hit:
+        return Hit.model_validate(hit(fid) | {"score": score})
+
+    tech = [h("T1", 0.9), h("T2", 0.85), h("T3", 0.8), h("B", 0.6)]
+    health = [h("H1", 0.7), h("B", 0.75), h("H2", 0.65)]
+    fused = fuse_alternatives([tech, health])
+    # Each side's best first, then each side's second (B, 2nd for health), and so on.
+    assert [x.id for x in fused] == ["T1", "H1", "T2", "B", "T3", "H2"]
+    assert next(x for x in fused if x.id == "B").score == 0.75
+
+
 # ----------------------------------------------------------------- indexes
 
 

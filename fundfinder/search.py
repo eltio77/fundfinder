@@ -261,3 +261,18 @@ def fuse(text_hits: list[Hit], exposure_hits: list[Hit]) -> list[Hit]:
         )
         for fid, score in fused
     ]
+
+
+def fuse_alternatives(lists: list[list[Hit]]) -> list[Hit]:
+    """Interleave one result list per alternative ("tech or healthcare"): each
+    side's 1st, then each side's 2nd, and so on, by a fund's best rank in any list.
+    Unlike RRF, a fund that is middling for both sides doesn't outrank the best
+    match for each. Each fund keeps its best similarity score."""
+    best: dict[str, Hit] = {}
+    order: dict[str, tuple[int, int]] = {}
+    for side, hits in enumerate(lists):
+        for rank, h in enumerate(hits):
+            if h.id not in best or h.score > best[h.id].score:
+                best[h.id] = h
+            order[h.id] = min(order.get(h.id, (rank, side)), (rank, side))
+    return [best[fid] for fid in sorted(order, key=order.__getitem__)]

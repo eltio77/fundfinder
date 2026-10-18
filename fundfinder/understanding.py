@@ -278,6 +278,100 @@ def _tidy(text: str) -> str:
     return text.strip(" ,.;:-")
 
 
+# ------------------------------------------------------------------ alternatives
+
+# One embedding of "tech or healthcare" lands between the two and tends to find
+# only one side. `alternatives` splits it so each side is searched on its own.
+MAX_ALTERNATIVES = 4
+# Shared nouns after the last alternative: "UK or European *equity*".
+_HEAD = re.compile(
+    r"(?:funds?|trackers?|index|equity|equities|shares|stocks|companies|portfolios?)",
+    re.IGNORECASE,
+)
+# Words that end an alternative on the left: "index funds tracking *the* S&P 500 or ...".
+_BOUNDARY = re.compile(
+    r"(?:the|a|an|in|of|from|tracking|track|tracks|following|for|with|and|but|to|into|on|by"
+    r"|that|which|either|under|below|over|than|or)",
+    re.IGNORECASE,
+)
+_VOCAB = [ASSET_CLASSES, SECTORS, REGIONS, IA_SECTORS]
+
+
+def _is_term(words: list[str]) -> bool:
+    phrase = " ".join(words)
+    return any(_lookup(phrase, table) is not None for table in _VOCAB)
+
+
+@dataclass
+class Alternative:
+    name: str  # "UK"
+    text: str  # "UK equity": what is searched
+
+
+def alternatives(text: str) -> list[Alternative]:
+    """Each side of the first "A or B" / "A, B or C" in text, with the shared words
+    kept: "UK or European equity" -> "UK equity", "European equity". Empty when text
+    has no clear alternatives."""
+    tokens = text.split()
+    words = [t.rstrip(",") for t in tokens]
+    lowered = [w.lower() for w in words]
+    if "or" not in lowered:
+        return []
+    i = lowered.index("or")
+    if i == 0 or i == len(tokens) - 1:
+        return []
+
+    # Right side: up to a comma, a boundary word or a shared head noun. If the left side
+    # already ends with its own head ("income funds or growth funds"), keep the right's.
+    left_has_head = (
+        _HEAD.fullmatch(words[i - 1]) is not None
+        and i >= 2
+        and not _BOUNDARY.fullmatch(words[i - 2])
+        and not tokens[i - 2].endswith(",")
+    )
+    end = i + 1
+    while end < len(tokens):
+        w = words[end]
+        if _BOUNDARY.fullmatch(w) or (_HEAD.fullmatch(w) and not left_has_head and end > i + 1):
+            break
+        end += 1
+        if tokens[end - 1].endswith(","):
+            break
+    right = words[i + 1 : end]
+    width = len(right)
+
+    # Left side: one or more items of about the same width, separated by commas.
+    def item_before(stop: int) -> tuple[int, list[str]]:
+        start = stop
+        while start > 0 and stop - start < width:
+            w = words[start - 1]
+            if _BOUNDARY.fullmatch(w) or (start < stop and tokens[start - 1].endswith(",")):
+                break
+            start -= 1
+        # Grow to a whole known term: "money market or cash funds".
+        if start > 0 and not tokens[start - 1].endswith(",") and _is_term(words[start - 1 : stop]):
+            start -= 1
+        return start, words[start:stop]
+
+    start, first = item_before(i)
+    items = [first]
+    while start > 0 and tokens[start - 1].endswith(",") and len(items) < MAX_ALTERNATIVES - 1:
+        start, item = item_before(start)
+        if not item:
+            break
+        items.insert(0, item)
+    if not first or not right:
+        return []
+    items.append(right)
+
+    prefix = [t for t in tokens[:start] if t.lower() != "either"]
+    comma = "," if tokens[end - 1].endswith(",") else ""
+    found = {
+        " ".join([*prefix, " ".join(item) + comma, *tokens[end:]]): " ".join(item) for item in items
+    }
+    return [Alternative(name, text) for text, name in found.items()] if len(found) > 1 else []
+
+
 # ------------------------------------------------------------------ main entry
 
 

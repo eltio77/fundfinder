@@ -36,6 +36,8 @@ export interface SearchResponse {
     applied: Understood[];
     summary: string | null;
     notice: string | null;
+    /** For "A or B": each text searched on its own, then merged. */
+    alternatives?: string[];
   } | null;
   limit: number;
   num_candidates: number | null;

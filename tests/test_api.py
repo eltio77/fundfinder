@@ -181,6 +181,28 @@ def test_search_explains_when_exclusions_leave_nothing(client, fake):
     assert "“Not mainly North America”" in notice
 
 
+def test_search_runs_each_alternative_and_merges(client, fake):
+    async def search_text(q, **kw):
+        fake.calls.append(("search", q, kw))
+        side = "T" if q.startswith("tech") else "H"
+        return [make_hit(f"{side}{i}", 0.9 - i / 100) for i in range(3)]
+
+    fake.search_text = search_text
+    body = client.get("/search", params={"q": "tech or healthcare funds", "limit": 4}).json()
+    assert sorted(c[1] for c in fake.calls) == ["healthcare funds", "tech funds"]
+    assert [h["id"] for h in body["results"]] == ["T0", "H0", "T1", "H1"]
+    interp = body["interpretation"]
+    assert interp["alternatives"] == ["tech funds", "healthcare funds"]
+    assert {"key": "any_of", "label": "Any of: tech · healthcare"} in interp["applied"]
+
+
+def test_search_alternatives_can_be_turned_off(client, fake):
+    params = {"q": "tech or healthcare", "ignore": ["any_of"]}
+    body = client.get("/search", params=params).json()
+    assert [c[1] for c in fake.calls] == ["tech or healthcare"]
+    assert body["interpretation"]["alternatives"] == []
+
+
 class FakeLlm:
     model = "claude-test"
 
