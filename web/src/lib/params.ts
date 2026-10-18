@@ -7,7 +7,7 @@ export const DEFAULT_LIMIT = 10;
 const MAX_QUERY_LENGTH = 2000;
 const MAX_LIMIT = 100;
 const MAX_NUM_CANDIDATES = 10_000;
-const MAX_IGNORED = 50;
+const MAX_IGNORED = 20;
 
 /** A whole number in [min, max], else undefined. */
 function intIn(v: number | undefined, min: number, max: number): number | undefined {

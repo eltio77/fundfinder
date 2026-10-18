@@ -63,6 +63,6 @@ describe("untrusted URL values", () => {
     expect(readQuery(p).ignore).toEqual(["a", "b"]);
     const many = new URLSearchParams();
     for (let i = 0; i < 200; i++) many.append("ignore", `k${i}`);
-    expect(readQuery(many).ignore).toHaveLength(50);
+    expect(readQuery(many).ignore).toHaveLength(20);
   });
 });
