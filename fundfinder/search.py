@@ -46,6 +46,7 @@ class Filters(BaseModel):
     is_passive: bool | None = None
     # Set by query understanding ("no bonds"), not exposed as a query parameter.
     asset_class_nin: list[str] | None = None
+    ia_sector_nin: list[str] | None = None
 
     def to_mql(self) -> dict[str, Any] | None:
         clauses: list[dict[str, Any]] = []
@@ -59,6 +60,8 @@ class Filters(BaseModel):
             clauses.append({"is_passive": {"$eq": self.is_passive}})
         if self.asset_class_nin:
             clauses.append({"asset_class": {"$nin": self.asset_class_nin}})
+        if self.ia_sector_nin:
+            clauses.append({"ia_sector": {"$nin": self.ia_sector_nin}})
         if not clauses:
             return None
         return clauses[0] if len(clauses) == 1 else {"$and": clauses}

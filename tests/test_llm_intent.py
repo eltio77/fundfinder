@@ -104,6 +104,7 @@ def test_unknown_or_invalid_values_are_dropped():
         "exclude_sectors": ["Information Technology", "Astrology", 3],
         "exclude_regions": ["UK", "Emerging markets", "Mars"],
         "exclude_asset_classes": ["Property", "Gold"],
+        "exclude_ia_sectors": ["Japan", "Crypto"],
         "sort": "random",
     }
     r = reading_from_plan(raw, "original query", VOCAB)
@@ -116,6 +117,7 @@ def test_unknown_or_invalid_values_are_dropped():
     assert [a.key for a in r.applied] == [
         "ia_sector",
         "not_asset:Property",
+        "not_ia_sector:Japan",
         "not_sector:Information Technology",
         "not_region:UK",
         f"not_region:{EM_GROUP}",

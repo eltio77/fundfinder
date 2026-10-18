@@ -29,7 +29,7 @@ flowchart LR
      - cost caps ("under 0.2%", "below 15bps")
      - fund type ("index funds", "tracker", "actively managed")
      - one asset class ("bonds", "property")
-     - negations ("not tech", "ex UK", "no bonds")
+     - negations ("not tech", "ex UK", "no bonds", "not commodities")
      - cost order ("cheapest", "most expensive")
 
      Places and themes such as "Japan" or "healthcare" are left to the match.

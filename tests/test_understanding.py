@@ -108,6 +108,10 @@ def test_asset_class(q, asset):
         # A comma without a closing conjunction starts a new clause.
         ("not an index fund, japan", "japan", ["is_passive"]),
         ("not too risky", "not too risky", []),
+        ("gold mining shares not a commodities", "gold mining shares",
+         ["asset_class", "not_ia_sector:Commodities and Natural Resources"]),
+        ("energy, not natural resources funds", "energy",
+         ["not_ia_sector:Commodities and Natural Resources"]),
     ],
 )  # fmt: skip
 def test_negations(q, text, expected):
@@ -159,6 +163,23 @@ def test_plan_explicit_filters_win_and_ignore_drops():
     assert p.filters.ocf_max is None and p.filters.is_passive is True
     assert not p.exclusions
     assert [a.key for a in p.applied] == ["is_passive"]
+
+
+def test_negated_ia_sector_is_a_pre_filter():
+    sector = "Commodities and Natural Resources"
+    p = plan("gold mining shares not commodities", Filters())
+    assert p.filters.ia_sector_nin == [sector]
+    assert p.applied[-1].label == f"No {sector} funds"
+    # Removing the chip, or choosing that sector yourself, drops the exclusion.
+    assert (
+        plan(
+            "gold miners not commodities", Filters(), {f"not_ia_sector:{sector}"}
+        ).filters.ia_sector_nin
+        is None
+    )
+    assert (
+        plan("gold miners not commodities", Filters(ia_sector=sector)).filters.ia_sector_nin is None
+    )
 
 
 @pytest.mark.parametrize(

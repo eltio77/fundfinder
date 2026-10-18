@@ -64,6 +64,7 @@ def test_filters_to_mql():
     assert Filters(asset_class="Equity").to_mql() == {"asset_class": {"$eq": "Equity"}}
     mql = Filters(ocf_max=0.2, is_passive=True).to_mql()
     assert mql == {"$and": [{"ocf": {"$lte": 0.2}}, {"is_passive": {"$eq": True}}]}
+    assert Filters(ia_sector_nin=["Japan"]).to_mql() == {"ia_sector": {"$nin": ["Japan"]}}
 
 
 # ---------------------------------------------------------------- pipeline

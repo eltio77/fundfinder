@@ -218,6 +218,7 @@ deterministic rules:
 | "bonds", "gilts", "equity", "shares", "property", "multi-asset", "money market" (exactly one named) | `asset_class` | no |
 | "60% in shares" | `asset_class=Mixed Assets` | no |
 | "no bonds or property" | `asset_class` not in (…), as a pre-filter | yes |
+| "not commodities", "no natural resources funds" | `ia_sector` not "Commodities and Natural Resources", as a pre-filter | yes |
 | "not tech", "without tech or banks", "excluding healthcare" | drop funds with **50% or more** in that sector | yes |
 | "ex UK", "not in the US", "excluding China", "non-UK" | drop funds with **50% or more** in that region | yes |
 

@@ -75,6 +75,12 @@ ASSET_CLASSES: dict[str, str] = {
     r"equit(?:y|ies)|shares|stocks|stock market": "Equity",
 }
 
+# IA sectors that can be negated ("not commodities"). Only where the word names the
+# sector itself; "not tech" stays a GICS exposure exclusion.
+IA_SECTORS: dict[str, str] = {
+    r"commodit(?:y|ies)|natural resources": "Commodities and Natural Resources",
+}
+
 ASSET_LABEL = {
     "Equity": "share (equity) funds",
     "Fixed Income": "bond funds",
@@ -120,6 +126,7 @@ def _alternation(patterns: dict) -> str:
 
 _TERM = (
     rf"(?:{_alternation(SECTORS)}|{_alternation(REGIONS)}|{_alternation(ASSET_CLASSES)}"
+    rf"|{_alternation(IA_SECTORS)}"
     r"|index(?![\s-]linked)|trackers?|passive)"  # "not index-linked" isn't about trackers
 )
 _SUFFIX = r"(?:\s+(?:funds?|stocks?|shares|companies|sectors?|exposure|names|heavy|focused))?"
@@ -238,6 +245,7 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
     exclusions = Exclusions()
     applied: list[Understood] = []
     excluded_assets: list[str] = []
+    excluded_ia_sectors: list[str] = []
     negated_passive: bool | None = None
 
     # 1. Negations first, so "not an index fund" isn't read as "index fund".
@@ -255,6 +263,9 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
                 took = True
             elif (asset := _lookup(term, ASSET_CLASSES)) and not _lookup(term, SECTORS):
                 excluded_assets.append(asset)
+                took = True
+            elif ia_sector := _lookup(term, IA_SECTORS):
+                excluded_ia_sectors.append(ia_sector)
                 took = True
             elif sector := _lookup(term, SECTORS):
                 exclusions.sectors.append(sector)
@@ -313,6 +324,9 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
     for asset in dict.fromkeys(excluded_assets):
         applied.append(Understood(key=f"not_asset:{asset}", label=f"No {ASSET_LABEL[asset]}"))
     filters.asset_class_nin = list(dict.fromkeys(excluded_assets)) or None
+    for sector in dict.fromkeys(excluded_ia_sectors):
+        applied.append(Understood(key=f"not_ia_sector:{sector}", label=f"No {sector} funds"))
+    filters.ia_sector_nin = list(dict.fromkeys(excluded_ia_sectors)) or None
     for s in dict.fromkeys(exclusions.sectors):
         name = SECTOR_LABEL.get(s, s.lower())
         applied.append(Understood(key=f"not_sector:{s}", label=f"Not mainly {name}"))
@@ -359,6 +373,10 @@ def merge(
             if explicit.asset_class == value:
                 continue
             merged.asset_class_nin = [*(merged.asset_class_nin or []), value]
+        elif kind == "not_ia_sector":
+            if explicit.ia_sector == value:
+                continue
+            merged.ia_sector_nin = [*(merged.ia_sector_nin or []), value]
         keep.append(item)
     kept = {i.key for i in keep}
     final_exclusions = Exclusions(

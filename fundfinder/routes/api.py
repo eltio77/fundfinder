@@ -134,7 +134,7 @@ def _response(params: SearchParams, filters: Filters, started: float, **kw) -> S
         if params.exact
         else params.num_candidates or default_num_candidates(params.limit),
         exact=params.exact,
-        filters=filters.model_dump(exclude_none=True, exclude={"asset_class_nin"}),
+        filters=filters.model_dump(exclude_none=True, exclude={"asset_class_nin", "ia_sector_nin"}),
         took_ms=round((time.perf_counter() - started) * 1000, 1),
         **kw,
     )
