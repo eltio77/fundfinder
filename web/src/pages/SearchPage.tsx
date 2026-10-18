@@ -22,7 +22,7 @@ const EXAMPLES = [
   { q: "Japanese companies that are reforming", tone: "lilac" },
   { q: "low-risk UK government bonds", tone: "forest" },
   { q: "artificial intelligence and chips", tone: "amber" },
-  { q: "invests in Apple", tone: "coral" },
+  { q: "low cost invests in Apple", tone: "coral" },
 ];
 
 // Subtitle for the results order: "auto" when the server inferred it from the query.
