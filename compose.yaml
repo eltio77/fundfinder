@@ -24,6 +24,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.vercel
+    # Rebuild on every `up`, so the container never runs stale code. Layer caching
+    # keeps unchanged builds fast.
+    pull_policy: build
     env_file: .env
     environment:
       PORT: "8000"
