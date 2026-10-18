@@ -1,0 +1,10 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.vercel
+    env_file: .env
+    environment:
+      PORT: "8000"
+    ports:
+      - "8000:8000"
