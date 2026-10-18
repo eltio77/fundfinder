@@ -124,6 +124,16 @@ class FundSearch:
     async def get_fund(self, fund_id: str) -> dict[str, Any] | None:
         return await self.coll.find_one({"_id": fund_id})
 
+    async def clusters(self) -> dict[str, list[dict[str, str]]]:
+        """Synthetic evaluation clusters -> member funds (id, name), for test navigation."""
+        cursor = self.coll.find({"cluster_id": {"$ne": None}}, {"name": 1, "cluster_id": 1}).sort(
+            "_id", 1
+        )
+        out: dict[str, list[dict[str, str]]] = {}
+        async for doc in cursor:
+            out.setdefault(doc["cluster_id"], []).append({"id": doc["_id"], "name": doc["name"]})
+        return dict(sorted(out.items()))
+
     async def facets(self) -> dict[str, list[str]]:
         """Distinct values for the filter dropdowns."""
         ia_sectors, asset_classes = await asyncio.gather(

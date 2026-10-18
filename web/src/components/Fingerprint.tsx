@@ -4,9 +4,9 @@ import type { ExposureLayout } from "../lib/api";
 import { intensities } from "../lib/format";
 
 const BLOCKS = [
-  { key: "sectors", label: "Sectors", tone: "ink" },
-  { key: "regions", label: "Regions", tone: "accent" },
-  { key: "asset_classes", label: "Assets", tone: "sage" },
+  { key: "sectors", label: "Sectors", tone: "forest" },
+  { key: "regions", label: "Regions", tone: "lilac" },
+  { key: "asset_classes", label: "Assets", tone: "amber" },
 ] as const;
 
 interface Props {

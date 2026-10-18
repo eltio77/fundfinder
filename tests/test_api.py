@@ -164,3 +164,13 @@ def test_web_mount_skipped_without_build(tmp_path):
     from fundfinder.routes.web import mount_web
 
     assert mount_web(create_app(web_dist=None), tmp_path) is False
+
+
+def test_clusters(client, fake):
+    async def clusters():
+        return {"trk_sp500": [{"id": "F1", "name": "A"}, {"id": "F2", "name": "B"}]}
+
+    fake.clusters = clusters
+    assert client.get("/clusters").json() == {
+        "trk_sp500": [{"id": "F1", "name": "A"}, {"id": "F2", "name": "B"}]
+    }

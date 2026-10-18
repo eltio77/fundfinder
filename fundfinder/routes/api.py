@@ -152,3 +152,11 @@ async def meta(
             "max_num_candidates": MAX_NUM_CANDIDATES,
         },
     }
+
+
+@router.get("/clusters")
+async def clusters(
+    search: Annotated[FundSearch, Depends(get_search)],
+) -> dict[str, list[dict[str, str]]]:
+    """Deliberate test clusters in the synthetic data (empty for real data)."""
+    return await search.clusters()

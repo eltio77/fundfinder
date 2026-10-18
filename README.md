@@ -41,13 +41,22 @@ To point the API or scripts at the local Docker Mongo instead of Atlas, prefix c
 `web/` is a React 19 + TypeScript app built with Vite. The production build is baked into the
 same Docker image and served by FastAPI at `/` and `/fund/{id}`. There's no frontend server.
 
+The layout is a dashboard: a sidebar and a white main panel with hairline cards. The palette is
+forest, cream, lilac, amber and coral, set in Geist, with light and dark themes.
+
+- **Sidebar:** quick search (⌘K), **Test sets** (the deliberate clusters, linking to a member of
+  each), recently viewed funds, and API status.
 - **Search:** free-text semantic search with filters and query settings (limit, numCandidates,
-  ANN/exact). All state lives in the URL, so searches can be shared.
-- **Fund page:** composition, plus the three similarity modes side by side. Hovering a fund
-  highlights it in every column. "Only cheaper" filters on OCF, and "Show test labels" ticks
-  results from the fund's synthetic cluster, with an n/m siblings count per column.
+  ANN/exact). Stat cards show results, latency and best score. A "search insight" card reads the
+  score distribution to say whether the top match is clear or the results are bunched. All state
+  lives in the URL, so searches can be shared.
+- **Fund page:** OCF and type, an exposure-mix card (top sector, region and asset weights as
+  proportional blocks), holdings, the objective, and a **mode-agreement gauge**: how many
+  neighbours the text and exposure modes share. Below that, the three modes side by side.
+  Hovering a fund highlights it in every column. "Only cheaper" filters on OCF, and "Test labels"
+  ticks designed siblings.
 - **Exposure fingerprint:** each 26-dim exposure vector drawn as a barcode (sectors | regions |
-  asset classes), so you can see why two funds are considered close.
+  asset classes).
 - **Rate limits:** a request throttled by Voyage (HTTP 429) retries itself with a visible
   countdown.
 
@@ -116,6 +125,8 @@ allowance still applies.
 | `GET /health` | Pings Mongo; 503 if unreachable |
 | `GET /search?q=...` | Semantic search on `profile_auto` |
 | `GET /funds/{id}` | Fund document |
+| `GET /meta` | Filter facets, exposure-vector layout, defaults |
+| `GET /clusters` | Synthetic test clusters and their members |
 | `GET /funds/{id}/similar?mode=text\|exposure\|both` | Neighbours of a fund, excluding itself |
 
 Common query parameters: `limit` (1-100, default 10), `num_candidates` (default `20 x limit`,

@@ -133,8 +133,15 @@ function searchParams(filters: Filters, settings: SearchSettings): Params {
   };
 }
 
+export interface ClusterMember {
+  id: string;
+  name: string;
+}
+
 export const api = {
   meta: (signal?: AbortSignal) => get<Meta>("/meta", {}, signal),
+  clusters: (signal?: AbortSignal) =>
+    get<Record<string, ClusterMember[]>>("/clusters", {}, signal),
   fund: (id: string, signal?: AbortSignal) =>
     get<Fund>(`/funds/${encodeURIComponent(id)}`, {}, signal),
   search: (q: string, filters: Filters, settings: SearchSettings, signal?: AbortSignal) =>

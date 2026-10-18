@@ -187,3 +187,34 @@ def test_definition_matches_ignores_server_defaults():
     changed["fields"][0]["similarity"] = "euclidean"
     assert not definition_matches(desired, changed)
     assert not definition_matches(desired, {"fields": desired["fields"][:-1]})
+
+
+def test_clusters_groups_members():
+    class Cursor:
+        def __init__(self, docs):
+            self.docs = docs
+
+        def sort(self, *a):
+            return self
+
+        def __aiter__(self):
+            async def gen():
+                for d in self.docs:
+                    yield d
+
+            return gen()
+
+    class Coll:
+        def find(self, q, proj):
+            assert q == {"cluster_id": {"$ne": None}}
+            return Cursor(
+                [
+                    {"_id": "F1", "name": "A", "cluster_id": "trk_b"},
+                    {"_id": "F2", "name": "B", "cluster_id": "act_a"},
+                    {"_id": "F3", "name": "C", "cluster_id": "trk_b"},
+                ]
+            )
+
+    out = run(FundSearch(Coll(), "voyage-4").clusters())
+    assert list(out) == ["act_a", "trk_b"]
+    assert out["trk_b"] == [{"id": "F1", "name": "A"}, {"id": "F3", "name": "C"}]

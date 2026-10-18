@@ -1,54 +1,60 @@
+import { Shell } from "./components/Shell";
 import { Link } from "./components/ui";
 import { api } from "./lib/api";
-import { MetaContext, useRequest } from "./lib/hooks";
+import { MetaContext, useRequest, useTheme } from "./lib/hooks";
 import { useRoute } from "./lib/router";
 import { FundPage } from "./pages/FundPage";
 import { SearchPage } from "./pages/SearchPage";
 
-const today = new Intl.DateTimeFormat("en-GB", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-}).format(new Date());
+function greeting(): string {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+}
 
 export function App() {
   const route = useRoute();
+  const [theme, toggleTheme] = useTheme();
   const meta = useRequest("meta", (signal) => api.meta(signal));
+  const clusters = useRequest("clusters", (signal) => api.clusters(signal));
+
+  const title =
+    route.name === "fund" ? (
+      <span className="crumbs">
+        <Link to="/">Search</Link>
+        <span aria-hidden>/</span>
+        <span>{route.id}</span>
+      </span>
+    ) : route.name === "search" ? (
+      `${greeting()}`
+    ) : (
+      "Not found"
+    );
+  const subtitle =
+    route.name === "search" ? "Find UK funds that hold and behave alike." : undefined;
 
   return (
     <MetaContext.Provider value={meta.data}>
-      <div className="grain" aria-hidden />
-      <header className="masthead">
-        <div className="masthead-rule mono">
-          <span>{today}</span>
-          <span className="hide-sm">Synthetic UK fund universe · 300 funds</span>
-          <span className={`status ${meta.error ? "down" : meta.data ? "up" : ""}`}>
-            {meta.error ? "API unavailable" : meta.data ? "Connected" : "Connecting"}
-          </span>
-        </div>
-        <Link to="/" className="brand">
-          Fund <em>Finder</em>
-        </Link>
-      </header>
-
-      <main>
+      <Shell
+        route={route}
+        clusters={clusters.data}
+        embedModel={meta.data?.embed_model ?? null}
+        apiUp={meta.error ? false : meta.data ? true : null}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        title={title}
+        subtitle={subtitle}
+      >
         {route.name === "search" && <SearchPage params={route.params} />}
         {route.name === "fund" && <FundPage id={route.id} />}
         {route.name === "notFound" && (
-          <div className="page">
-            <h1 className="display">Not found.</h1>
-            <Link to="/" className="btn-link">
-              ← Back to search
+          <div className="card">
+            <p>That page doesn't exist.</p>
+            <Link to="/" className="btn-ghost">
+              Back to search
             </Link>
           </div>
         )}
-      </main>
-
-      <footer className="colophon mono">
-        <span>Prototype · synthetic data, not investment information</span>
-        <span>MongoDB Vector Search · Voyage AI · FastAPI</span>
-      </footer>
+      </Shell>
     </MetaContext.Provider>
   );
 }

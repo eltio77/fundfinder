@@ -24,14 +24,128 @@ export function Link({
   );
 }
 
+/** Number with its trailing decimals faded, e.g. 0.51% -> "0.5" + faded "1%". */
+export function Num({
+  value,
+  digits = 2,
+  suffix = "",
+  fade = 1,
+}: {
+  value: number;
+  digits?: number;
+  suffix?: string;
+  fade?: number;
+}) {
+  const s = value.toFixed(digits);
+  const cut = digits > 0 ? s.length - Math.min(fade, digits) : s.length;
+  return (
+    <span className="num-text">
+      {s.slice(0, cut)}
+      <span className="faded">
+        {s.slice(cut)}
+        {suffix}
+      </span>
+    </span>
+  );
+}
+
+/** Text whose tail fades to grey, as in the reference's insight cards. */
+export function FadeText({ strong, soft }: { strong: string; soft: string }) {
+  return (
+    <p className="fade-text">
+      <span>{strong} </span>
+      <span className="soft">{soft}</span>
+    </p>
+  );
+}
+
 export function ScoreBar({ fill, label }: { fill: number; label: string }) {
   return (
     <span className="score">
-      <span className="score-track" aria-hidden>
-        <span className="score-fill" style={{ transform: `scaleX(${fill})` }} />
+      <span className="bar" aria-hidden>
+        <span style={{ transform: `scaleX(${fill})` }} />
       </span>
-      <span className="mono">{label}</span>
+      <span className="score-label">{label}</span>
     </span>
+  );
+}
+
+export function Tabs<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+  label: string;
+}) {
+  return (
+    <div className="tabs" role="tablist" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="tab"
+          aria-selected={o.value === value}
+          className={o.value === value ? "on" : ""}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Stat({
+  label,
+  value,
+  foot,
+  trend,
+  style,
+}: {
+  label: string;
+  value: ReactNode;
+  foot: ReactNode;
+  trend?: ReactNode;
+  style?: CSSProperties;
+}) {
+  return (
+    <div className="stat" style={style}>
+      <span className="stat-label">{label}</span>
+      <span className="stat-value">{value}</span>
+      <span className="stat-foot">
+        <span>{foot}</span>
+        {trend && <span className="stat-trend">{trend}</span>}
+      </span>
+    </div>
+  );
+}
+
+export function IconButton({
+  label,
+  onClick,
+  href,
+  children,
+}: {
+  label: string;
+  onClick?: () => void;
+  href?: string;
+  children: ReactNode;
+}) {
+  if (href) {
+    return (
+      <a className="icon-btn" href={href} aria-label={label} title={label} target="_blank" rel="noreferrer">
+        {children}
+      </a>
+    );
+  }
+  return (
+    <button type="button" className="icon-btn" aria-label={label} title={label} onClick={onClick}>
+      {children}
+    </button>
   );
 }
 
@@ -57,27 +171,31 @@ export function ErrorNote({
   if (error instanceof ApiError && error.rateLimited) {
     return (
       <div className="note note-wait" role="status">
-        <strong>Voyage rate limit</strong>
+        <span className="pill pill-amber">Rate limited</span>
         <p>
-          Query text is embedded by Voyage at search time. Keys without a payment method allow
-          3 requests a minute.
+          Voyage embeds query text at search time. Keys without a payment method allow 3 requests
+          a minute.
         </p>
-        <p className="mono">{retryIn !== null ? `Retrying in ${retryIn}s…` : "Gave up after 3 tries."}</p>
-        {retryIn === null && (
-          <button type="button" className="btn-link" onClick={onRetry}>
-            Try again
-          </button>
-        )}
+        <p className="note-foot">
+          {retryIn !== null ? `Retrying in ${retryIn}s…` : "Gave up after 3 tries."}
+          {retryIn === null && (
+            <button type="button" className="btn-ghost" onClick={onRetry}>
+              Try again
+            </button>
+          )}
+        </p>
       </div>
     );
   }
   return (
     <div className="note note-error" role="alert">
-      <strong>{error instanceof ApiError ? `Error ${error.status}` : "Request failed"}</strong>
+      <span className="pill pill-coral">{error instanceof ApiError ? `Error ${error.status}` : "Failed"}</span>
       <p>{error.message}</p>
-      <button type="button" className="btn-link" onClick={onRetry}>
-        Try again
-      </button>
+      <p className="note-foot">
+        <button type="button" className="btn-ghost" onClick={onRetry}>
+          Try again
+        </button>
+      </p>
     </div>
   );
 }

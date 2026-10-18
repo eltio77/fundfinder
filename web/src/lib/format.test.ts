@@ -28,8 +28,9 @@ describe("format", () => {
   });
 
   it("labels clusters", () => {
-    expect(clusterLabel("trk_ftse100")).toBe("Tracker · ftse100");
-    expect(clusterLabel("act_uk_income")).toBe("Near-dupe · uk income");
+    expect(clusterLabel("trk_ftse100")).toBe("Tracker · FTSE 100");
+    expect(clusterLabel("act_uk_income")).toBe("Near-dupe · UK Equity Income");
+    expect(clusterLabel("act_new_thing")).toBe("Near-dupe · new thing");
     expect(clusterLabel(null)).toBeNull();
   });
 

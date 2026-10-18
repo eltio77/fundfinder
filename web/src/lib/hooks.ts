@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { ApiError, type Meta } from "./api";
+import { ApiError, type ClusterMember, type Meta } from "./api";
 
 const MAX_RATE_LIMIT_RETRIES = 3;
 const DEFAULT_RETRY_S = 20;
@@ -108,4 +108,64 @@ export function usePersistentFlag(name: string, initial: boolean): [boolean, (v:
     [name],
   );
   return [value, set];
+}
+
+function readJson<T>(name: string, fallback: T): T {
+  try {
+    const raw = window.localStorage.getItem(name);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(name: string, value: unknown): void {
+  try {
+    window.localStorage.setItem(name, JSON.stringify(value));
+  } catch {
+    /* storage blocked */
+  }
+}
+
+const RECENT_KEY = "ff.recent";
+const RECENT_MAX = 5;
+const RECENT_EVENT = "fundfinder:recent";
+
+/** Recently opened funds (per browser), newest first. */
+export function useRecent(): ClusterMember[] {
+  const [items, setItems] = useState<ClusterMember[]>(() => readJson(RECENT_KEY, []));
+  useEffect(() => {
+    const sync = () => setItems(readJson(RECENT_KEY, []));
+    window.addEventListener(RECENT_EVENT, sync);
+    return () => window.removeEventListener(RECENT_EVENT, sync);
+  }, []);
+  return items;
+}
+
+export function rememberFund(fund: ClusterMember): void {
+  const prev = readJson<ClusterMember[]>(RECENT_KEY, []).filter((f) => f.id !== fund.id);
+  writeJson(RECENT_KEY, [{ id: fund.id, name: fund.name }, ...prev].slice(0, RECENT_MAX));
+  window.dispatchEvent(new Event(RECENT_EVENT));
+}
+
+export type Theme = "light" | "dark";
+
+/** Explicit theme choice wins; otherwise follow the OS. */
+export function useTheme(): [Theme, () => void] {
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = readJson<Theme | null>("ff.theme", null);
+    if (saved) return saved;
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+  const toggle = useCallback(() => {
+    setTheme((t) => {
+      const next = t === "dark" ? "light" : "dark";
+      writeJson("ff.theme", next);
+      return next;
+    });
+  }, []);
+  return [theme, toggle];
 }

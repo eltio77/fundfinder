@@ -21,13 +21,37 @@ export function scoreFill(v: number, mode: Mode | null): number {
   return Math.max(0.03, Math.min(1, fill));
 }
 
-/** Readable label for a synthetic cluster id, e.g. "trk_ftse100" -> "Tracker · ftse100". */
+const CLUSTER_NAMES: Record<string, string> = {
+  trk_ftse100: "FTSE 100",
+  trk_ftse_allshare: "FTSE All-Share",
+  trk_ftse_gilts: "UK Gilts",
+  trk_global_agg: "Global Aggregate",
+  trk_msci_world: "MSCI World",
+  trk_sp500: "S&P 500",
+  act_uk_income: "UK Equity Income",
+  act_global_tech: "Global Technology",
+  act_uk_smaller: "UK Smaller Companies",
+  act_strat_bond: "Strategic Bond",
+  act_japan_value: "Japan Value",
+  outlier_gold: "Gold Miners",
+  outlier_frontier: "Frontier Markets",
+  outlier_india: "India",
+  outlier_biotech: "Biotechnology",
+  outlier_direct_property: "UK Direct Property",
+};
+
+const CLUSTER_KINDS: Record<string, string> = { trk: "Tracker", act: "Near-dupe", outlier: "Outlier" };
+
+/** Human name for a synthetic cluster id, e.g. "trk_sp500" -> "S&P 500". */
+export function clusterName(id: string): string {
+  return CLUSTER_NAMES[id] ?? id.split("_").slice(1).join(" ");
+}
+
+/** "Kind · name", e.g. "trk_ftse100" -> "Tracker · FTSE 100". */
 export function clusterLabel(id: string | null): string | null {
   if (!id) return null;
-  const [kind, ...rest] = id.split("_");
-  const name = rest.join(" ");
-  const kinds: Record<string, string> = { trk: "Tracker", act: "Near-dupe", outlier: "Outlier" };
-  return `${kinds[kind] ?? kind} · ${name}`;
+  const kind = id.split("_")[0];
+  return `${CLUSTER_KINDS[kind] ?? kind} · ${clusterName(id)}`;
 }
 
 export interface SiblingStats {

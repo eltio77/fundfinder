@@ -1,8 +1,34 @@
 import type { Filters, Meta, SearchSettings } from "../lib/api";
+import { Tabs } from "./ui";
 
 const LIMITS = [5, 10, 20, 50];
 
-export function FilterBar({
+type Mgmt = "any" | "passive" | "active";
+const MGMT: { value: Mgmt; label: string }[] = [
+  { value: "any", label: "All" },
+  { value: "passive", label: "Passive" },
+  { value: "active", label: "Active" },
+];
+
+export function ManagementTabs({
+  filters,
+  onChange,
+}: {
+  filters: Filters;
+  onChange: (f: Filters) => void;
+}) {
+  const value: Mgmt = filters.is_passive === undefined ? "any" : filters.is_passive ? "passive" : "active";
+  return (
+    <Tabs
+      value={value}
+      options={MGMT}
+      label="Management"
+      onChange={(v) => onChange({ ...filters, is_passive: v === "any" ? undefined : v === "passive" })}
+    />
+  );
+}
+
+export function FilterFields({
   filters,
   onChange,
   meta,
@@ -12,17 +38,17 @@ export function FilterBar({
   meta: Meta | null;
 }) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
-  const active = Object.values(filters).some((v) => v !== undefined);
+  const active =
+    filters.asset_class !== undefined || filters.ia_sector !== undefined || filters.ocf_max !== undefined;
   return (
-    <fieldset className="controls">
-      <legend>Filters</legend>
+    <div className="fields">
       <label className="field">
         <span>Asset class</span>
         <select
           value={filters.asset_class ?? ""}
           onChange={(e) => set({ asset_class: e.target.value || undefined })}
         >
-          <option value="">Any</option>
+          <option value="">All asset classes</option>
           {meta?.asset_classes.map((a) => <option key={a}>{a}</option>)}
         </select>
       </label>
@@ -32,7 +58,7 @@ export function FilterBar({
           value={filters.ia_sector ?? ""}
           onChange={(e) => set({ ia_sector: e.target.value || undefined })}
         >
-          <option value="">Any</option>
+          <option value="">All sectors</option>
           {meta?.ia_sectors.map((s) => <option key={s}>{s}</option>)}
         </select>
       </label>
@@ -50,39 +76,20 @@ export function FilterBar({
           }
         />
       </label>
-      <div className="field">
-        <span>Management</span>
-        <div className="segmented" role="radiogroup" aria-label="Management">
-          {(
-            [
-              ["Any", undefined],
-              ["Passive", true],
-              ["Active", false],
-            ] as const
-          ).map(([label, value]) => (
-            <button
-              key={label}
-              type="button"
-              role="radio"
-              aria-checked={filters.is_passive === value}
-              className={filters.is_passive === value ? "on" : ""}
-              onClick={() => set({ is_passive: value })}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
       {active && (
-        <button type="button" className="btn-link clear" onClick={() => onChange({})}>
-          Clear
+        <button
+          type="button"
+          className="btn-ghost clear"
+          onClick={() => onChange({ is_passive: filters.is_passive })}
+        >
+          Clear filters
         </button>
       )}
-    </fieldset>
+    </div>
   );
 }
 
-export function SettingsBar({
+export function SettingsFields({
   settings,
   onChange,
   meta,
@@ -92,12 +99,10 @@ export function SettingsBar({
   meta: Meta | null;
 }) {
   const perResult = meta?.defaults.candidates_per_result ?? 20;
-  const effective = settings.numCandidates ?? settings.limit * perResult;
   return (
-    <fieldset className="controls controls-settings">
-      <legend>Query</legend>
+    <div className="fields">
       <label className="field field-narrow">
-        <span>limit</span>
+        <span>Limit</span>
         <select
           value={settings.limit}
           onChange={(e) => onChange({ ...settings, limit: Number(e.target.value) })}
@@ -122,36 +127,24 @@ export function SettingsBar({
           onChange={(e) =>
             onChange({
               ...settings,
-              numCandidates: e.target.value === "" ? null : Math.max(settings.limit, Number(e.target.value)),
+              numCandidates:
+                e.target.value === "" ? null : Math.max(settings.limit, Number(e.target.value)),
             })
           }
         />
       </label>
       <div className="field">
         <span>Search</span>
-        <div className="segmented" role="radiogroup" aria-label="Search type">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={!settings.exact}
-            className={!settings.exact ? "on" : ""}
-            onClick={() => onChange({ ...settings, exact: false })}
-            title={`Approximate (HNSW), ${effective} candidates`}
-          >
-            ANN
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={settings.exact}
-            className={settings.exact ? "on" : ""}
-            onClick={() => onChange({ ...settings, exact: true })}
-            title="Exact nearest neighbours (full scan)"
-          >
-            Exact
-          </button>
-        </div>
+        <Tabs
+          value={settings.exact ? "exact" : "ann"}
+          options={[
+            { value: "ann", label: "ANN" },
+            { value: "exact", label: "Exact" },
+          ]}
+          label="Search type"
+          onChange={(v) => onChange({ ...settings, exact: v === "exact" })}
+        />
       </div>
-    </fieldset>
+    </div>
   );
 }
