@@ -5,11 +5,21 @@ on:
   push:
     branches: [main]
 
+# Read-only token: CI needs no secrets and never writes to the repo.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   api:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -25,6 +35,8 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -34,3 +46,21 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # Known-vulnerability check on the locked dependencies (runtime and dev).
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv export --locked --no-hashes --no-emit-project -o requirements-audit.txt
+      - run: uvx pip-audit -r requirements-audit.txt --disable-pip --no-deps
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm audit --audit-level=high
+        working-directory: web

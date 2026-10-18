@@ -1,4 +1,7 @@
+# Secrets: any .env variant (.env, .env.local, web/.env.production, ...); only the template is committed.
 .env
+.env.*
+!.env.example
 .venv/
 __pycache__/
 *.pyc
