@@ -178,10 +178,11 @@ export const api = {
     filters: Filters,
     settings: SearchSettings,
     signal?: AbortSignal,
+    sort: Exclude<Sort, "auto"> = "relevance",
   ) =>
     get<SearchResponse>(
       `/funds/${encodeURIComponent(id)}/similar`,
-      { mode, ...searchParams(filters, settings) },
+      { mode, sort: sort === "relevance" ? null : sort, ...searchParams(filters, settings) },
       signal,
     ),
 };

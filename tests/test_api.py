@@ -176,6 +176,23 @@ def test_similar_modes(client, fake):
     assert [c[2] for c in fake.calls] == [Mode.text, Mode.exposure, Mode.both]
 
 
+@pytest.mark.parametrize(
+    ("sort", "expected"),
+    [(None, ["F2", "F3", "F4"]), ("cost", ["F3", "F2", "F4"]), ("cost_desc", ["F2", "F4", "F3"])],
+)
+def test_similar_sort(client, fake, sort, expected):
+    hits = [make_hit("F2", 0.9), make_hit("F3", 0.7, ocf=0.1), make_hit("F4", 0.6)]
+
+    async def similar(fund_id, mode, **kw):
+        return hits
+
+    fake.similar = similar
+    params = {"sort": sort} if sort else {}
+    body = client.get("/funds/F1/similar", params=params).json()
+    assert body["sort"] == (sort or "relevance")
+    assert [h["id"] for h in body["results"]] == expected
+
+
 def test_similar_default_mode_is_both(client, fake):
     client.get("/funds/F1/similar")
     assert fake.calls[0][2] is Mode.both

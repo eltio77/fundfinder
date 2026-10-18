@@ -67,15 +67,19 @@ function FundView({ fund }: { fund: Fund }) {
   const [hovered, setHovered] = useState<string | null>(null);
 
   const filters: Filters = cheaperOnly ? { ocf_max: Math.max(0, fund.ocf - 0.01) } : {};
-  const key = JSON.stringify([fund.id, settings, filters]);
+  // Asking for cheaper funds means cost matters: show those matches cheapest first.
+  const sort = cheaperOnly ? "cost" : "relevance";
+  const key = JSON.stringify([fund.id, settings, filters, sort]);
   // The fused list is the default view: one Voyage call, and its ranks say why each fund matched.
-  const both = useRequest(`both:${key}`, (s) => api.similar(fund.id, "both", filters, settings, s));
+  const both = useRequest(`both:${key}`, (s) =>
+    api.similar(fund.id, "both", filters, settings, s, sort),
+  );
   const showCompare = expert && compare;
   const text = useRequest(showCompare ? `text:${key}` : null, (s) =>
-    api.similar(fund.id, "text", filters, settings, s),
+    api.similar(fund.id, "text", filters, settings, s, sort),
   );
   const exposure = useRequest(showCompare ? `exposure:${key}` : null, (s) =>
-    api.similar(fund.id, "exposure", filters, settings, s),
+    api.similar(fund.id, "exposure", filters, settings, s, sort),
   );
   const states = { text, exposure, both };
 
@@ -141,7 +145,11 @@ function FundView({ fund }: { fund: Fund }) {
         <header className="results-head">
           <div>
             <h2>Funds like this</h2>
-            <p className="card-head-sub">Closest matches on description and holdings combined.</p>
+            <p className="card-head-sub">
+              {cheaperOnly
+                ? "Closest matches that cost less than this fund, cheapest first."
+                : "Closest matches on description and holdings combined."}
+            </p>
           </div>
           <Toggle checked={cheaperOnly} onChange={setCheaperOnly}>
             Only cheaper than <Num value={fund.ocf} digits={2} suffix="%" />

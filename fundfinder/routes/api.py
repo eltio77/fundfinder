@@ -67,6 +67,13 @@ def get_params(
 EXCLUSION_OVERFETCH = 3
 
 
+def order_by(hits: list[Hit], order: Sort) -> None:
+    """Re-order the best matches by cost, in place. Stable, so equal costs keep
+    their match order. Relevance (and auto) leaves the list as it is."""
+    if order in (Sort.cost, Sort.cost_desc):
+        hits.sort(key=lambda h: h.ocf, reverse=order is Sort.cost_desc)
+
+
 class Interpretation(BaseModel):
     text: str = Field(description="What was embedded, after removing constraints")
     applied: list[Understood] = Field(
@@ -154,9 +161,7 @@ async def search(
         hits = [h for h in hits if not exclusions.excludes(h.sector_weights, h.region_weights)]
     hits = hits[: params.limit]
     order = resolve_sort(sort, q)
-    if order in (Sort.cost, Sort.cost_desc):
-        # Re-orders the best matches only; stable, so equal costs keep match order.
-        hits.sort(key=lambda h: h.ocf, reverse=order is Sort.cost_desc)
+    order_by(hits, order)
     return _response(
         params,
         effective,
@@ -178,6 +183,10 @@ async def similar(
         Mode,
         Query(description="text: description · exposure: holdings mix · both: RRF fusion"),
     ] = Mode.both,
+    sort: Annotated[
+        Sort,
+        Query(description="relevance, or cost / cost_desc to show the matches by annual cost"),
+    ] = Sort.relevance,
 ) -> SearchResponse:
     """Funds most like this one, excluding itself."""
     started = time.perf_counter()
@@ -191,7 +200,9 @@ async def similar(
     )
     if hits is None:
         raise HTTPException(404, f"fund {fund_id} not found")
-    return _response(params, filters, started, fund_id=fund_id, mode=mode, results=hits)
+    order = Sort.relevance if sort is Sort.auto else sort  # no query text to read
+    order_by(hits, order)
+    return _response(params, filters, started, fund_id=fund_id, mode=mode, sort=order, results=hits)
 
 
 @router.get("/funds/{fund_id}", tags=["funds"])

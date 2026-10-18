@@ -155,6 +155,8 @@ for high cost ("high cost", "highest cost", "higher fees", "most expensive", "pr
 by descending OCF. Only the top `limit`
 matches are re-ordered: they're still the most relevant funds, shown cheapest first. "Low risk",
 "high yield" and similar don't trigger it. The response's `sort` says which order was used.
+`/funds/{id}/similar` accepts `sort=relevance|cost|cost_desc` too; the fund page's "Only cheaper
+than" toggle uses `sort=cost`.
 
 Before searching, `/search` also reads constraints from `q`: cost caps ("under 0.2%"), fund type
 ("index funds", "actively managed"), a single asset class ("bonds") and negations ("not tech",
