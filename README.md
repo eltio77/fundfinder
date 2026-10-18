@@ -2,7 +2,9 @@
 
 Prototype similarity search over (synthetic) UK funds using MongoDB Atlas Vector Search.
 
-> Work in progress: Atlas setup, seeding, indexes, eval and deploy sections land in later phases.
+**How it works:** [docs/how-it-works.md](docs/how-it-works.md) explains the data, the two
+similarity methods, indexes, the request flow, rank fusion, cost ordering, evaluation and
+deployment.
 
 ## Local run
 
