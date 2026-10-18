@@ -30,6 +30,9 @@ MAINLY = 0.5
 # OCFs above this are implausible, so a bigger number is probably an allocation
 # ("under 50% in shares") unless cost words make it explicit.
 MAX_PLAUSIBLE_OCF = 3.0
+# Even with cost words, a cap above this is not a cost ("fees under 99999%").
+# It also keeps huge numbers (float("9" * 400) is inf) out of filters and JSON.
+MAX_OCF = 100.0
 
 # Embedded when a query is only constraints.
 NEUTRAL_TEXT = "investment fund"
@@ -117,7 +120,7 @@ def _alternation(patterns: dict) -> str:
 
 _TERM = (
     rf"(?:{_alternation(SECTORS)}|{_alternation(REGIONS)}|{_alternation(ASSET_CLASSES)}"
-    r"|index|trackers?|passive)"
+    r"|index(?![\s-]linked)|trackers?|passive)"  # "not index-linked" isn't about trackers
 )
 _SUFFIX = r"(?:\s+(?:funds?|stocks?|shares|companies|sectors?|exposure|names|heavy|focused))?"
 # Words right after a number that make it an allocation, not a cost: "50% in shares",
@@ -272,7 +275,7 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
             continue  # a bare number with no % and no cost word: not a cost
         if _ALLOCATION_AFTER.match(text[m.end() :]):
             continue
-        if value <= 0 or (value > MAX_PLAUSIBLE_OCF and not m.group("pre")):
+        if not 0 < value <= MAX_OCF or (value > MAX_PLAUSIBLE_OCF and not m.group("pre")):
             continue
         filters.ocf_max = value
         applied.append(Understood(key="ocf_max", label=f"Annual cost {_fmt_pct(value)} or less"))
