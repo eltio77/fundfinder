@@ -173,6 +173,36 @@ Latest run ([reports/eval.md](reports/eval.md), Atlas Free cluster):
 | exposure | 0.62 | 0.92 | 35 ms |
 | both | **0.68** | **0.98** | 240 ms (API) |
 
+## Deploy (Vercel)
+
+Vercel builds `Dockerfile.vercel` (Container Runtime, beta, available on Hobby) on every push to
+`main`. The image includes the built React app. Set these project environment variables
+(Settings → Environment Variables, for Production and Preview), then redeploy:
+
+| Variable | Required | Value |
+|---|---|---|
+| `MONGODB_URI` | yes | Atlas SRV string for a **read-only** database user (role `read` on `fund_finder`) |
+| `PORT` | yes | `8000`. Vercel routes to port 80 unless `PORT` is set, and the container runs as a non-root user |
+| `MONGODB_DB` | no | defaults to `fund_finder` |
+| `EMBED_MODEL` | no | defaults to `voyage-4`; must match the model in the `profile_auto` index |
+
+You don't need `VOYAGE_API_KEY` on Vercel: Atlas embeds query text using the key registered in
+Atlas.
+
+**Atlas network access.** Vercel functions use dynamic egress IPs, and Static IPs / Secure Compute
+aren't available for custom containers yet. So Atlas has to allow `0.0.0.0/0`. That exposes the
+cluster's login endpoint to the internet, with TLS and a password as the only protection. To
+reduce the risk:
+
+- use a dedicated, read-only database user with a long random password
+- rotate the password if it leaks
+- keep anything sensitive out of this cluster
+
+The alternative is to put the API somewhere with a fixed egress IP.
+
+**Region.** Set the function region (Settings → Functions) to the one nearest your Atlas cluster.
+The default is `iad1` (US East). Each search makes a round trip to Atlas.
+
 ## Development
 
 ```bash
