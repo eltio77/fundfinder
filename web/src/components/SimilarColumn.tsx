@@ -1,6 +1,7 @@
 import type { Mode, SearchResponse } from "../lib/api";
 import { clusterSize, ms, score, scoreFill, siblingStats } from "../lib/format";
 import { type RequestState, useMeta } from "../lib/hooks";
+import { fundPath } from "../lib/router";
 import { Fingerprint } from "./Fingerprint";
 import { ErrorNote, Link, Num, ScoreBar, Skeleton } from "./ui";
 
@@ -68,7 +69,7 @@ export function SimilarColumn({ mode, state, clusterId, showLabels, hovered, onH
               >
                 <span className="nrank">{sibling ? "✓" : i + 1}</span>
                 <div className="nbody">
-                  <Link to={`/fund/${h.id}`} className="fund-link">
+                  <Link to={fundPath(h.id)} className="fund-link">
                     {h.name}
                   </Link>
                   <span className="sub">

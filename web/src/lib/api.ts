@@ -117,6 +117,28 @@ export class ApiError extends Error {
   }
 }
 
+const MAX_RETRY_AFTER_S = 120;
+
+/**
+ * Retry-After is either delay-seconds or an HTTP date. Returns whole seconds
+ * clamped to 1..120, or null when absent or unparseable, so an odd header can't
+ * stall the retry countdown (NaN never reaches 0) or push it hours away.
+ */
+export function parseRetryAfter(value: string | null, now: number = Date.now()): number | null {
+  const v = value?.trim();
+  if (!v) return null;
+  let seconds: number;
+  if (/^\d+$/.test(v)) {
+    seconds = Number(v);
+  } else {
+    // An HTTP date names its day and month; Date.parse alone would read "-5" as a year.
+    const at = /[a-z]/i.test(v) ? Date.parse(v) : NaN;
+    if (Number.isNaN(at)) return null;
+    seconds = Math.ceil((at - now) / 1000);
+  }
+  return Math.min(MAX_RETRY_AFTER_S, Math.max(1, seconds));
+}
+
 type Scalar = string | number | boolean | null | undefined;
 type Params = Record<string, Scalar | string[]>;
 
@@ -142,16 +164,13 @@ async function get<T>(
   if (!res.ok) {
     let detail = res.statusText;
     try {
-      const body = await res.json();
-      detail =
-        typeof body.detail === "string"
-          ? body.detail
-          : JSON.stringify(body.detail);
+      const body: { detail?: unknown } = await res.json();
+      if (typeof body.detail === "string") detail = body.detail;
+      else if (body.detail !== undefined) detail = JSON.stringify(body.detail);
     } catch {
       /* non-JSON error body */
     }
-    const retry = res.headers.get("Retry-After");
-    throw new ApiError(res.status, detail, retry ? Number(retry) : null);
+    throw new ApiError(res.status, detail, parseRetryAfter(res.headers.get("Retry-After")));
   }
   return res.json() as Promise<T>;
 }
@@ -214,3 +233,29 @@ export const api = {
       signal,
     ),
 };
+
+/** Shown when AI mode was busy or down and the standard reading was used instead. */
+export const AI_FALLBACK_NOTICE =
+  "AI interpretation is busy right now, so the standard reading of your words was used. Try again in a minute.";
+
+/**
+ * AI mode is best effort: when the AI search is rate limited (429) or unavailable
+ * (503), search again with the standard reading and say so, rather than showing
+ * an error or a long retry countdown. Other errors, and failures of the standard
+ * search itself (e.g. an embedding 429, retried by useRequest), propagate.
+ */
+export async function withAiFallback(
+  ai: boolean,
+  run: (ai: boolean) => Promise<SearchResponse>,
+): Promise<SearchResponse> {
+  if (!ai) return run(false);
+  try {
+    return await run(true);
+  } catch (e) {
+    if (!(e instanceof ApiError) || (e.status !== 429 && e.status !== 503)) throw e;
+    const res = await run(false);
+    return res.interpretation
+      ? { ...res, interpretation: { ...res.interpretation, notice: AI_FALLBACK_NOTICE } }
+      : res;
+  }
+}

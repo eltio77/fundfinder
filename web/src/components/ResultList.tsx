@@ -1,6 +1,7 @@
 import type { Hit } from "../lib/api";
 import { matchReason, STRENGTH_LABEL, score, strength, type Strength } from "../lib/format";
 import { useExpert, useMeta } from "../lib/hooks";
+import { fundPath } from "../lib/router";
 import { Fingerprint } from "./Fingerprint";
 import { IconArrowUpRight } from "./Icons";
 import { Link, Num } from "./ui";
@@ -30,7 +31,7 @@ export function ResultList({
         return (
           <li key={h.id} className="result" style={{ animationDelay: `${i * 35}ms` }}>
             <div className="result-main">
-              <Link to={`/fund/${h.id}`} className="result-name">
+              <Link to={fundPath(h.id)} className="result-name">
                 {h.name}
               </Link>
               <p className="result-meta">
@@ -70,7 +71,7 @@ export function ResultList({
                 {reason ? reason.label : STRENGTH_LABEL[s]}
               </span>
             </div>
-            <Link to={`/fund/${h.id}`} className="result-go" aria-label={`Open ${h.name}`}>
+            <Link to={fundPath(h.id)} className="result-go" aria-label={`Open ${h.name}`}>
               <IconArrowUpRight width={18} height={18} />
             </Link>
           </li>

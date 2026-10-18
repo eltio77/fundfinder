@@ -37,7 +37,7 @@ export function Understanding({
         </p>
       )}
       {notice && <p className="ai-notice">{notice}</p>}
-      <div className="understood" aria-label="How your search was understood">
+      <div className="understood" role="group" aria-label="How your search was understood">
         {applied.length > 0 && (
           <span className="understood-label">Understood as</span>
         )}

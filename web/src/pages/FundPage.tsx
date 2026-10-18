@@ -13,7 +13,7 @@ import { api, type Filters, type Fund, type Mode, type SearchSettings } from "..
 import { clusterLabel, clusterSize, matchReason, siblingStats } from "../lib/format";
 import { useExpert, useMeta, useRequest } from "../lib/hooks";
 import { DEFAULT_LIMIT } from "../lib/params";
-import { navigate } from "../lib/router";
+import { canGoBackInApp, navigate } from "../lib/router";
 
 const MODES: Mode[] = ["text", "exposure", "both"];
 
@@ -47,7 +47,8 @@ function firstSentence(text: string): [string, string] {
 
 function back() {
   // Return to the results the user came from when there are any.
-  if (window.history.length > 1 && document.referrer.startsWith(window.location.origin)) {
+  // (document.referrer can't tell: client-side navigation never updates it.)
+  if (canGoBackInApp()) {
     window.history.back();
   } else {
     navigate("/");

@@ -12,6 +12,7 @@ export function App() {
   const [expert, setExpert] = usePersistentFlag("ff.expert", false);
   const meta = useRequest("meta", (signal) => api.meta(signal));
   const apiUp = meta.error ? false : meta.data ? true : null;
+  const apiStatus = apiUp === null ? "Connecting" : apiUp ? "Connected" : "API unavailable";
 
   return (
     <MetaContext.Provider value={meta.data}>
@@ -30,7 +31,9 @@ export function App() {
               <div className="topnav-actions">
                 <span
                   className={`status-dot ${apiUp === null ? "" : apiUp ? "up" : "down"}`}
-                  title={apiUp === null ? "Connecting" : apiUp ? "Connected" : "API unavailable"}
+                  role="img"
+                  aria-label={apiStatus}
+                  title={apiStatus}
                 />
                 <a className="nav-api" href="/docs" target="_blank" rel="noreferrer" title="Swagger API docs">
                   API <IconArrowUpRight width={14} height={14} />
