@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from fundfinder.db import FUNDS, get_db
 from fundfinder.intent import Sort, resolve_sort
 from fundfinder.llm_intent import LlmInterpreter, LlmUnavailable, Vocabulary
+from fundfinder.ratelimit import limit_llm, limit_search
 from fundfinder.search import (
     CANDIDATES_PER_RESULT,
     MAX_LIMIT,
@@ -24,6 +25,11 @@ from fundfinder.understanding import Exclusions, Plan, Understood, merge, plan
 
 router = APIRouter()
 log = logging.getLogger("fundfinder")
+
+# Fund ids are short codes (F0001); anything else is rejected before reaching Mongo.
+FundId = Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{1,64}$", examples=["F0001"])]
+# Keys look like "is_passive" or "not_sector:Information Technology".
+MAX_IGNORE = 20
 
 
 class Intent(StrEnum):
@@ -134,7 +140,9 @@ def _response(params: SearchParams, filters: Filters, started: float, **kw) -> S
     )
 
 
-@router.get("/search", response_model=SearchResponse, tags=["search"])
+@router.get(
+    "/search", response_model=SearchResponse, tags=["search"], dependencies=[Depends(limit_search)]
+)
 async def search(
     request: Request,
     q: Annotated[
@@ -162,7 +170,10 @@ async def search(
     ] = True,
     ignore: Annotated[
         list[str],
-        Query(description="Keys from `interpretation.applied` to drop, e.g. is_passive"),
+        Query(
+            max_length=MAX_IGNORE,
+            description="Keys from `interpretation.applied` to drop, e.g. is_passive",
+        ),
     ] = [],  # noqa: B006 - FastAPI copies defaults per request
     intent: Annotated[
         Intent,
@@ -182,6 +193,7 @@ async def search(
     if intent is Intent.llm and interpret:
         if llm is None:
             raise HTTPException(503, "AI interpretation is not configured: set ANTHROPIC_API_KEY")
+        limit_llm(request)
         try:
             reading = await llm.read(q, await get_vocabulary(request, search))
         except LlmUnavailable as exc:
@@ -235,9 +247,14 @@ async def search(
     )
 
 
-@router.get("/funds/{fund_id}/similar", response_model=SearchResponse, tags=["search"])
+@router.get(
+    "/funds/{fund_id}/similar",
+    response_model=SearchResponse,
+    tags=["search"],
+    dependencies=[Depends(limit_search)],
+)
 async def similar(
-    fund_id: Annotated[str, Path(examples=["F0001"])],
+    fund_id: FundId,
     search: Annotated[FundSearch, Depends(get_search)],
     filters: Annotated[Filters, Depends(get_filters)],
     params: Annotated[SearchParams, Depends(get_params)],
@@ -269,7 +286,7 @@ async def similar(
 
 @router.get("/funds/{fund_id}", tags=["funds"])
 async def get_fund(
-    fund_id: Annotated[str, Path(examples=["F0001"])],
+    fund_id: FundId,
     search: Annotated[FundSearch, Depends(get_search)],
 ) -> dict[str, Any]:
     """One fund: facts, holdings, sector/region/asset weights and exposure vector."""

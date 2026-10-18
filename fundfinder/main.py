@@ -1,16 +1,17 @@
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from anthropic import AsyncAnthropic
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pymongo.errors import OperationFailure, PyMongoError
 
 from fundfinder.config import Settings, get_settings
 from fundfinder.db import NOT_CONFIGURED, make_client
 from fundfinder.llm_intent import LlmInterpreter
+from fundfinder.ratelimit import Limits
 from fundfinder.routes import api, health
 from fundfinder.routes.web import WEB_DIST, mount_web
 
@@ -34,6 +35,27 @@ OPENAPI_TAGS = [
     {"name": "ops", "description": "Health check"},
 ]
 
+# The React app loads only its own files plus Google Fonts.
+APP_CSP = (
+    "default-src 'self'; style-src 'self' https://fonts.googleapis.com; "
+    "font-src https://fonts.gstatic.com; img-src 'self' data:; object-src 'none'; "
+    "base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+)
+# Swagger UI and ReDoc are inline scripts plus files from jsDelivr.
+DOCS_CSP = (
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+    "font-src https://fonts.gstatic.com; img-src 'self' data: https://fastapi.tiangolo.com "
+    "https://cdn.redoc.ly; worker-src blob:; object-src 'none'; base-uri 'none'; "
+    "frame-ancestors 'none'"
+)
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -43,6 +65,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if app.state.mongo is None:
         log.error(NOT_CONFIGURED)
     app.state.llm = make_llm(settings)
+    app.state.limits = Limits.from_settings(settings)
     try:
         yield
     finally:
@@ -73,6 +96,19 @@ def create_app(web_dist: Path | None = WEB_DIST) -> FastAPI:
     app.include_router(api.router)
     if web_dist is not None:
         mount_web(app, web_dist)
+
+    docs_paths = {app.docs_url, app.redoc_url, app.swagger_ui_oauth2_redirect_url}
+
+    @app.middleware("http")
+    async def security_headers(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        response = await call_next(request)
+        for name, value in SECURITY_HEADERS.items():
+            response.headers.setdefault(name, value)
+        csp = DOCS_CSP if request.url.path in docs_paths else APP_CSP
+        response.headers.setdefault("Content-Security-Policy", csp)
+        return response
 
     @app.exception_handler(PyMongoError)
     async def mongo_error(request: Request, exc: PyMongoError) -> JSONResponse:
