@@ -8,7 +8,7 @@ import { ResultList } from "../components/ResultList";
 import { SimpleFilters } from "../components/SimpleFilters";
 import { Understanding } from "../components/Understanding";
 import { TestSets } from "../components/TestSets";
-import { ErrorNote, Skeleton, Tabs } from "../components/ui";
+import { ErrorNote, Skeleton, Tabs, Toggle } from "../components/ui";
 import { api, type Filters, type SearchSettings, type Sort } from "../lib/api";
 import { ms } from "../lib/format";
 import { useExpert, useMeta, useRequest } from "../lib/hooks";
@@ -40,7 +40,8 @@ const ORDER_NOTE: Record<Exclude<Sort, "auto">, { auto: string; chosen: string }
 export function SearchPage({ params }: { params: URLSearchParams }) {
   const meta = useMeta();
   const expert = useExpert();
-  const { q, sort, ignore, filters, settings } = readQuery(params);
+  const { q, sort, ignore, ai, filters, settings } = readQuery(params);
+  const aiAvailable = meta?.llm_intent?.available ?? false;
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
   // The box is autofocused on load, so focus alone doesn't count as interacting.
@@ -49,7 +50,7 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
   const engaged = touched && (focused || draft.trim() !== "");
 
   // A new query starts fresh (auto order, nothing ignored); filter, setting and
-  // order changes keep the user's other choices.
+  // order changes keep the user's other choices. The AI mode carries over.
   const go = (
     nextQ: string,
     f: Filters,
@@ -57,13 +58,16 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
     replace = false,
     o: Sort = "auto",
     ig: string[] = [],
-  ) => navigate(`/${writeQuery(nextQ.trim(), f, s, o, ig)}`, { replace });
+    withAi = ai,
+  ) => navigate(`/${writeQuery(nextQ.trim(), f, s, o, ig, withAi)}`, { replace });
+  // Switching mode re-reads the same query, so earlier chip removals no longer apply.
+  const setAi = (on: boolean) => go(q, filters, settings, true, "auto", [], on);
   const refine = (changes: { f?: Filters; s?: SearchSettings; o?: Sort; ig?: string[] }) =>
     go(q, changes.f ?? filters, changes.s ?? settings, true, changes.o ?? sort, changes.ig ?? ignore);
 
-  const key = q ? JSON.stringify([q, sort, ignore, filters, settings]) : null;
+  const key = q ? JSON.stringify([q, sort, ignore, ai, filters, settings]) : null;
   const { data, error, loading, retryIn, reload } = useRequest(key, (signal) =>
-    api.search(q, sort, ignore, filters, settings, signal),
+    api.search(q, sort, ignore, ai, filters, settings, signal),
   );
   const orderNote = data ? ORDER_NOTE[data.sort][sort === "auto" ? "auto" : "chosen"] : "";
   const clusters = useRequest(expert ? "clusters" : null, (signal) => api.clusters(signal));
@@ -108,6 +112,25 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
             Search
           </button>
         </form>
+        <div className="search-mode">
+          <Toggle
+            checked={ai && aiAvailable}
+            onChange={setAi}
+            disabled={!aiAvailable}
+            title={
+              aiAvailable
+                ? "An AI model reads what you mean: typos, vague wording and well-known names"
+                : "Not available: the server has no AI key configured"
+            }
+          >
+            Interpret with AI <span className="pill pill-amber">Beta</span>
+          </Toggle>
+          <span className="search-mode-hint">
+            {ai && aiAvailable
+              ? "Reads what you mean, e.g. “chep well known UK” → cheap FTSE 100 trackers."
+              : "Off: searches your words as written."}
+          </span>
+        </div>
         <div className="chips" aria-label="Example searches">
           <span className="chips-label">Try</span>
           {EXAMPLES.filter((ex) => ex.q !== q).map((ex) => (

@@ -144,15 +144,25 @@ class Understood(BaseModel):
 
 @dataclass
 class Exclusions:
-    """Funds to drop: those *mainly* in these sectors or regions."""
+    """Filters applied after the search (the indexes can't pre-filter on these):
+    drop funds *mainly* in these sectors or regions, and, if `tracked_indexes`
+    is set, funds that don't track one of those indexes."""
 
     sectors: list[str] = field(default_factory=list)
     regions: list[str] = field(default_factory=list)
+    tracked_indexes: list[str] = field(default_factory=list)
 
     def __bool__(self) -> bool:
-        return bool(self.sectors or self.regions)
+        return bool(self.sectors or self.regions or self.tracked_indexes)
 
-    def excludes(self, sector_weights: dict[str, float], region_weights: dict[str, float]) -> bool:
+    def excludes(
+        self,
+        sector_weights: dict[str, float],
+        region_weights: dict[str, float],
+        tracked_index: str | None = None,
+    ) -> bool:
+        if self.tracked_indexes and tracked_index not in self.tracked_indexes:
+            return True
         if any(sector_weights.get(s, 0.0) >= MAINLY for s in self.sectors):
             return True
         return any(
@@ -312,16 +322,29 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
 
 
 def plan(q: str, explicit: Filters, ignore: set[str] | frozenset[str] = frozenset()) -> Plan:
-    """Merge what q implies with the filters the user set. Explicit filters win,
-    and anything in `ignore` (keys from a previous response) is dropped."""
-    text, inferred, exclusions, applied = interpret(q)
+    """Merge what q implies with the filters the user set (see `merge`)."""
+    return merge(*interpret(q), explicit=explicit, ignore=ignore)
+
+
+def merge(
+    text: str,
+    inferred: Filters,
+    exclusions: Exclusions,
+    applied: list[Understood],
+    *,
+    explicit: Filters,
+    ignore: set[str] | frozenset[str] = frozenset(),
+) -> Plan:
+    """Combine an interpretation (rules or LLM) with the filters the user set.
+    Explicit filters win, and anything in `ignore` (keys from a previous
+    response) is dropped."""
     keep = []
     merged = explicit.model_copy()
     for item in applied:
         if item.key in ignore:
             continue
         kind, _, value = item.key.partition(":")
-        if kind in ("ocf_max", "is_passive", "asset_class"):
+        if kind in ("ocf_max", "is_passive", "asset_class", "ia_sector"):
             if getattr(explicit, kind) is not None:
                 continue  # the user's own filter wins
             setattr(merged, kind, getattr(inferred, kind))
@@ -334,5 +357,6 @@ def plan(q: str, explicit: Filters, ignore: set[str] | frozenset[str] = frozense
     final_exclusions = Exclusions(
         sectors=[s for s in exclusions.sectors if f"not_sector:{s}" in kept],
         regions=[r for r in exclusions.regions if f"not_region:{r}" in kept],
+        tracked_indexes=[i for i in exclusions.tracked_indexes if f"tracks:{i}" in kept],
     )
     return Plan(text=text, filters=merged, exclusions=final_exclusions, applied=keep)

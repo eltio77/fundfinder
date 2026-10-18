@@ -1,11 +1,14 @@
+import logging
 import time
-from typing import Annotated, Any
+from enum import StrEnum
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel, Field
 
 from fundfinder.db import FUNDS, get_db
 from fundfinder.intent import Sort, resolve_sort
+from fundfinder.llm_intent import LlmInterpreter, LlmUnavailable, Vocabulary
 from fundfinder.search import (
     CANDIDATES_PER_RESULT,
     MAX_LIMIT,
@@ -17,9 +20,28 @@ from fundfinder.search import (
     default_num_candidates,
 )
 from fundfinder.taxonomy import ASSET_CLASS_BREAKDOWN, GICS_SECTORS, REGIONS
-from fundfinder.understanding import Understood, plan
+from fundfinder.understanding import Exclusions, Plan, Understood, merge, plan
 
 router = APIRouter()
+log = logging.getLogger("fundfinder")
+
+
+class Intent(StrEnum):
+    rules = "rules"  # deterministic reading of explicit constraints (default)
+    llm = "llm"  # Claude reads intent: typos, vague wording, implied indexes
+
+
+def get_llm(request: Request) -> LlmInterpreter | None:
+    return getattr(request.app.state, "llm", None)
+
+
+async def get_vocabulary(request: Request, search: FundSearch) -> Vocabulary:
+    # Fetched once per process: the vocabulary only changes on re-seed.
+    vocab = getattr(request.app.state, "vocabulary", None)
+    if vocab is None:
+        vocab = Vocabulary.from_facets(await search.facets())
+        request.app.state.vocabulary = vocab
+    return vocab
 
 
 def get_search(request: Request) -> FundSearch:
@@ -75,10 +97,13 @@ def order_by(hits: list[Hit], order: Sort) -> None:
 
 
 class Interpretation(BaseModel):
+    source: Literal["rules", "llm"] = "rules"
     text: str = Field(description="What was embedded, after removing constraints")
     applied: list[Understood] = Field(
         description="Constraints read from the query; pass a key in `ignore` to drop it"
     )
+    summary: str | None = Field(None, description="LLM only: how the query was read")
+    notice: str | None = Field(None, description="E.g. why the LLM reading wasn't used")
 
 
 class SearchResponse(BaseModel):
@@ -111,6 +136,7 @@ def _response(params: SearchParams, filters: Filters, started: float, **kw) -> S
 
 @router.get("/search", response_model=SearchResponse, tags=["search"])
 async def search(
+    request: Request,
     q: Annotated[
         str,
         Query(
@@ -138,15 +164,45 @@ async def search(
         list[str],
         Query(description="Keys from `interpretation.applied` to drop, e.g. is_passive"),
     ] = [],  # noqa: B006 - FastAPI copies defaults per request
+    intent: Annotated[
+        Intent,
+        Query(
+            description="rules: read explicit constraints (default). llm: Claude also reads "
+            "vague wording and typos, e.g. 'chep well known Uk' -> cheap FTSE 100 trackers"
+        ),
+    ] = Intent.rules,
+    llm: Annotated[LlmInterpreter | None, Depends(get_llm)] = None,
 ) -> SearchResponse:
     """Semantic search. Constraints in `q` ("under 0.2%", "index funds", "not tech")
     become filters; Atlas embeds the rest with Voyage and searches `profile_auto`."""
     started = time.perf_counter()
-    if interpret:
+    source: Literal["rules", "llm"] = "rules"
+    summary = notice = None
+    llm_sort: Sort | None = None
+    if intent is Intent.llm and interpret:
+        if llm is None:
+            raise HTTPException(503, "AI interpretation is not configured: set ANTHROPIC_API_KEY")
+        try:
+            reading = await llm.read(q, await get_vocabulary(request, search))
+        except LlmUnavailable as exc:
+            log.warning("LLM intent failed, using rules: %s", exc)
+            notice = "AI interpretation is unavailable right now, so the standard reading was used."
+            p = plan(q, filters, set(ignore))
+        else:
+            source, summary, llm_sort = "llm", reading.summary, reading.sort
+            p = merge(
+                reading.text,
+                reading.filters,
+                reading.exclusions,
+                reading.applied,
+                explicit=filters,
+                ignore=set(ignore),
+            )
+    elif interpret:
         p = plan(q, filters, set(ignore))
-        text, effective, exclusions, applied = p.text, p.filters, p.exclusions, p.applied
     else:
-        text, effective, exclusions, applied = q, filters, None, []
+        p = Plan(text=q, filters=filters, exclusions=Exclusions(), applied=[])
+    text, effective, exclusions, applied = p.text, p.filters, p.exclusions, p.applied
     fetch = params.limit * EXCLUSION_OVERFETCH if exclusions else params.limit
     hits = await search.search_text(
         text,
@@ -158,9 +214,13 @@ async def search(
         exact=params.exact,
     )
     if exclusions:
-        hits = [h for h in hits if not exclusions.excludes(h.sector_weights, h.region_weights)]
+        hits = [
+            h
+            for h in hits
+            if not exclusions.excludes(h.sector_weights, h.region_weights, h.tracked_index)
+        ]
     hits = hits[: params.limit]
-    order = resolve_sort(sort, q)
+    order = llm_sort if sort is Sort.auto and llm_sort else resolve_sort(sort, q)
     order_by(hits, order)
     return _response(
         params,
@@ -168,7 +228,9 @@ async def search(
         started,
         query=q,
         sort=order,
-        interpretation=Interpretation(text=text, applied=applied),
+        interpretation=Interpretation(
+            source=source, text=text, applied=applied, summary=summary, notice=notice
+        ),
         results=hits,
     )
 
@@ -220,7 +282,9 @@ async def get_fund(
 
 @router.get("/meta", tags=["reference"])
 async def meta(
-    request: Request, search: Annotated[FundSearch, Depends(get_search)]
+    request: Request,
+    search: Annotated[FundSearch, Depends(get_search)],
+    llm: Annotated[LlmInterpreter | None, Depends(get_llm)],
 ) -> dict[str, Any]:
     """Filter options, exposure-vector layout and search defaults for clients."""
     return {
@@ -231,6 +295,8 @@ async def meta(
             "asset_classes": ASSET_CLASS_BREAKDOWN,
         },
         "embed_model": request.app.state.settings.embed_model,
+        # Whether the "Interpret with AI" option can be offered.
+        "llm_intent": {"available": llm is not None, "model": llm.model if llm else None},
         "defaults": {
             "limit": 10,
             "max_limit": MAX_LIMIT,

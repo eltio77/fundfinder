@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Similarity search over UK funds with MongoDB Atlas Vector Search"
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=1.15",
     "fastapi>=0.115",
     "pydantic-settings>=2.16.0",
     "pymongo>=4.13",

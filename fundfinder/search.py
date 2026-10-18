@@ -144,11 +144,17 @@ class FundSearch:
         return dict(sorted(out.items()))
 
     async def facets(self) -> dict[str, list[str]]:
-        """Distinct values for the filter dropdowns."""
-        ia_sectors, asset_classes = await asyncio.gather(
-            self.coll.distinct("ia_sector"), self.coll.distinct("asset_class")
+        """Distinct values for the filter dropdowns (and the LLM's vocabulary)."""
+        ia_sectors, asset_classes, indexes = await asyncio.gather(
+            self.coll.distinct("ia_sector"),
+            self.coll.distinct("asset_class"),
+            self.coll.distinct("tracked_index"),
         )
-        return {"ia_sectors": sorted(ia_sectors), "asset_classes": sorted(asset_classes)}
+        return {
+            "ia_sectors": sorted(ia_sectors),
+            "asset_classes": sorted(asset_classes),
+            "tracked_indexes": sorted(i for i in indexes if i),
+        }
 
     async def search_text(
         self,

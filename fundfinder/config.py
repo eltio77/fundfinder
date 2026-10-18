@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     # inside mongot (Atlas or local), so the app itself never holds a Voyage key.
     embed_model: str = "voyage-4"
 
+    # Optional "Interpret with AI" search (fundfinder/llm_intent.py). Without a key the
+    # toggle is unavailable and search uses the rule-based reading only.
+    anthropic_api_key: SecretStr | None = None
+    intent_model: str = "claude-haiku-5-5"
+    intent_timeout_s: float = 10.0
+
 
 @lru_cache
 def get_settings() -> Settings:

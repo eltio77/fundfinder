@@ -29,7 +29,14 @@ export interface SearchResponse {
   mode: Mode | null;
   sort: Exclude<Sort, "auto">;
   /** Only on /search: what was embedded and which constraints were applied. */
-  interpretation: { text: string; applied: Understood[] } | null;
+  interpretation: {
+    /** "llm" when Claude read the query, "rules" for the standard reading. */
+    source: "rules" | "llm";
+    text: string;
+    applied: Understood[];
+    summary: string | null;
+    notice: string | null;
+  } | null;
   limit: number;
   num_candidates: number | null;
   exact: boolean;
@@ -73,6 +80,8 @@ export interface Meta {
   asset_classes: string[];
   exposure_layout: ExposureLayout;
   embed_model: string;
+  /** Whether "Interpret with AI" is available (the server has an Anthropic key). */
+  llm_intent: { available: boolean; model: string | null };
   defaults: {
     limit: number;
     max_limit: number;
@@ -116,20 +125,28 @@ export function toQuery(params: Params): string {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     for (const item of Array.isArray(v) ? v : [v]) {
-      if (item !== undefined && item !== null && item !== "") qs.append(k, String(item));
+      if (item !== undefined && item !== null && item !== "")
+        qs.append(k, String(item));
     }
   }
   const s = qs.toString();
   return s ? `?${s}` : "";
 }
 
-async function get<T>(path: string, params: Params = {}, signal?: AbortSignal): Promise<T> {
+async function get<T>(
+  path: string,
+  params: Params = {},
+  signal?: AbortSignal,
+): Promise<T> {
   const res = await fetch(path + toQuery(params), { signal });
   if (!res.ok) {
     let detail = res.statusText;
     try {
       const body = await res.json();
-      detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+      detail =
+        typeof body.detail === "string"
+          ? body.detail
+          : JSON.stringify(body.detail);
     } catch {
       /* non-JSON error body */
     }
@@ -163,13 +180,20 @@ export const api = {
     q: string,
     sort: Sort,
     ignore: string[],
+    ai: boolean,
     filters: Filters,
     settings: SearchSettings,
     signal?: AbortSignal,
   ) =>
     get<SearchResponse>(
       "/search",
-      { q, sort: sort === "auto" ? null : sort, ignore, ...searchParams(filters, settings) },
+      {
+        q,
+        sort: sort === "auto" ? null : sort,
+        ignore,
+        intent: ai ? "llm" : null,
+        ...searchParams(filters, settings),
+      },
       signal,
     ),
   similar: (
@@ -182,7 +206,11 @@ export const api = {
   ) =>
     get<SearchResponse>(
       `/funds/${encodeURIComponent(id)}/similar`,
-      { mode, sort: sort === "relevance" ? null : sort, ...searchParams(filters, settings) },
+      {
+        mode,
+        sort: sort === "relevance" ? null : sort,
+        ...searchParams(filters, settings),
+      },
       signal,
     ),
 };

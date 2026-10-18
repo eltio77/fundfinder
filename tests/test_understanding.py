@@ -122,6 +122,13 @@ def test_exclusions_mean_mainly():
     assert em.excludes({}, {"Emerging Asia": 0.3, "Emerging EMEA": 0.15, "Latin America": 0.1})
 
 
+def test_tracked_index_post_filter():
+    ex = Exclusions(tracked_indexes=["FTSE 100 Index"])
+    assert not ex.excludes({}, {}, "FTSE 100 Index")
+    assert ex.excludes({}, {}, "FTSE All-Share Index")
+    assert ex.excludes({}, {}, None)  # active funds track nothing
+
+
 def test_plan_explicit_filters_win_and_ignore_drops():
     p = plan("index funds under 0.2%, no bonds", Filters(is_passive=False))
     assert p.filters.is_passive is False  # user's own filter

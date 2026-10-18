@@ -19,35 +19,58 @@ export function Understanding({
   onReset: () => void;
 }) {
   const expert = useExpert();
-  const { applied, text } = interpretation;
-  if (applied.length === 0 && ignored.length === 0 && !expert) return null;
+  const { applied, text, source, summary, notice } = interpretation;
+  if (
+    applied.length === 0 &&
+    ignored.length === 0 &&
+    !expert &&
+    !summary &&
+    !notice
+  )
+    return null;
 
   return (
-    <div className="understood" aria-label="How your search was understood">
-      {applied.length > 0 && <span className="understood-label">Understood as</span>}
-      {applied.map((a) => (
-        <span className="understood-chip" key={a.key}>
-          {a.label}
-          <button
-            type="button"
-            aria-label={`Remove “${a.label}”`}
-            title="Remove this and search again"
-            onClick={() => onIgnore(a.key)}
-          >
-            ×
+    <>
+      {source === "llm" && summary && (
+        <p className="ai-summary">
+          <span className="pill pill-amber">AI</span> {summary}
+        </p>
+      )}
+      {notice && <p className="ai-notice">{notice}</p>}
+      <div className="understood" aria-label="How your search was understood">
+        {applied.length > 0 && (
+          <span className="understood-label">Understood as</span>
+        )}
+        {applied.map((a) => (
+          <span className="understood-chip" key={a.key}>
+            {a.label}
+            <button
+              type="button"
+              aria-label={`Remove “${a.label}”`}
+              title="Remove this and search again"
+              onClick={() => onIgnore(a.key)}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {ignored.length > 0 && (
+          <button type="button" className="understood-reset" onClick={onReset}>
+            Restore{" "}
+            {ignored.length === 1
+              ? "removed rule"
+              : `${ignored.length} removed rules`}
           </button>
-        </span>
-      ))}
-      {ignored.length > 0 && (
-        <button type="button" className="understood-reset" onClick={onReset}>
-          Restore {ignored.length === 1 ? "removed rule" : `${ignored.length} removed rules`}
-        </button>
-      )}
-      {expert && text !== q && (
-        <span className="understood-text mono" title="Text sent for embedding">
-          embedded: “{text}”
-        </span>
-      )}
-    </div>
+        )}
+        {(expert || source === "llm") && text !== q && (
+          <span
+            className="understood-text mono"
+            title="Text sent for embedding"
+          >
+            searched for: “{text}”
+          </span>
+        )}
+      </div>
+    </>
   );
 }

@@ -8,6 +8,8 @@ export function readQuery(params: URLSearchParams): {
   sort: Sort;
   /** Understood-constraint keys the user removed (see SearchResponse.interpretation). */
   ignore: string[];
+  /** "Interpret with AI" mode (?intent=llm); off by default. */
+  ai: boolean;
   filters: Filters;
   settings: SearchSettings;
 } {
@@ -23,6 +25,7 @@ export function readQuery(params: URLSearchParams): {
     q: params.get("q") ?? "",
     sort: sort === "relevance" || sort === "cost" || sort === "cost_desc" ? sort : "auto",
     ignore: params.getAll("ignore"),
+    ai: params.get("intent") === "llm",
     filters: {
       asset_class: params.get("asset_class") || undefined,
       ia_sector: params.get("ia_sector") || undefined,
@@ -43,9 +46,11 @@ export function writeQuery(
   settings: SearchSettings,
   sort: Sort = "auto",
   ignore: string[] = [],
+  ai = false,
 ): string {
   const p = new URLSearchParams();
   if (q) p.set("q", q);
+  if (ai) p.set("intent", "llm");
   if (sort !== "auto") p.set("sort", sort);
   for (const k of ignore) p.append("ignore", k);
   if (filters.asset_class) p.set("asset_class", filters.asset_class);

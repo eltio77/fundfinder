@@ -3,12 +3,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from anthropic import AsyncAnthropic
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pymongo.errors import OperationFailure, PyMongoError
 
-from fundfinder.config import get_settings
+from fundfinder.config import Settings, get_settings
 from fundfinder.db import NOT_CONFIGURED, make_client
+from fundfinder.llm_intent import LlmInterpreter
 from fundfinder.routes import api, health
 from fundfinder.routes.web import WEB_DIST, mount_web
 
@@ -40,11 +42,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.mongo = make_client(settings) if settings.mongodb_uri else None
     if app.state.mongo is None:
         log.error(NOT_CONFIGURED)
+    app.state.llm = make_llm(settings)
     try:
         yield
     finally:
         if app.state.mongo is not None:
             await app.state.mongo.close()
+        if app.state.llm is not None:
+            await app.state.llm.client.close()
+
+
+def make_llm(settings: Settings) -> LlmInterpreter | None:
+    if settings.anthropic_api_key is None or not settings.anthropic_api_key.get_secret_value():
+        return None
+    client = AsyncAnthropic(api_key=settings.anthropic_api_key.get_secret_value())
+    return LlmInterpreter(client, settings.intent_model, settings.intent_timeout_s)
 
 
 def create_app(web_dist: Path | None = WEB_DIST) -> FastAPI:

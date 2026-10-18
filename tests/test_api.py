@@ -147,6 +147,89 @@ def test_search_exclusions_drop_mainly_matching_funds(client, fake):
     assert kw["num_candidates"] >= 15
 
 
+class FakeLlm:
+    model = "claude-test"
+
+    def __init__(self, fail: bool = False):
+        self.fail = fail
+        self.calls: list[str] = []
+
+    async def read(self, q, vocab):
+        from fundfinder.intent import Sort
+        from fundfinder.llm_intent import LlmReading, LlmUnavailable
+        from fundfinder.search import Filters
+        from fundfinder.understanding import Exclusions, Understood
+
+        self.calls.append(q)
+        if self.fail:
+            raise LlmUnavailable("down")
+        return LlmReading(
+            text="UK large companies index fund tracking the FTSE 100",
+            filters=Filters(is_passive=True),
+            exclusions=Exclusions(),
+            applied=[Understood(key="is_passive", label="Index funds only")],
+            sort=Sort.cost,
+            summary="Cheap FTSE 100 trackers, cheapest first.",
+        )
+
+
+def _llm_client(fake, llm):
+    from fundfinder.routes.api import get_llm
+
+    app = create_app()
+    app.dependency_overrides[get_search] = lambda: fake
+    app.dependency_overrides[get_llm] = lambda: llm
+    return TestClient(app)
+
+
+def test_search_llm_intent(fake):
+    async def facets():
+        return {
+            "asset_classes": ["Equity"],
+            "ia_sectors": [],
+            "tracked_indexes": ["FTSE 100 Index"],
+        }
+
+    fake.facets = facets
+    llm = FakeLlm()
+    with _llm_client(fake, llm) as c:
+        body = c.get("/search", params={"q": "chep well known Uk", "intent": "llm"}).json()
+        assert body["interpretation"]["source"] == "llm"
+        assert body["interpretation"]["summary"].startswith("Cheap FTSE 100")
+        assert fake.calls[0][1] == "UK large companies index fund tracking the FTSE 100"
+        assert fake.calls[0][2]["filters"].is_passive is True
+        assert body["sort"] == "cost"  # the LLM's order, since sort=auto
+        assert [h["id"] for h in body["results"]] == ["F3", "F2", "F4"]
+
+        # An explicit sort and the user's own filters still win.
+        body = c.get(
+            "/search",
+            params={"q": "chep well known Uk", "intent": "llm", "sort": "relevance",
+                    "is_passive": "false"},
+        ).json()  # fmt: skip
+        assert body["sort"] == "relevance"
+        assert fake.calls[1][2]["filters"].is_passive is False
+        assert body["interpretation"]["applied"] == []
+
+
+def test_search_llm_failure_falls_back_to_rules(fake):
+    async def facets():
+        return {}
+
+    fake.facets = facets
+    with _llm_client(fake, FakeLlm(fail=True)) as c:
+        body = c.get("/search", params={"q": "index funds under 0.2%", "intent": "llm"}).json()
+    assert body["interpretation"]["source"] == "rules"
+    assert "unavailable" in body["interpretation"]["notice"]
+    assert fake.calls[0][2]["filters"].ocf_max == 0.2
+
+
+def test_search_llm_not_configured(client):
+    r = client.get("/search", params={"q": "x", "intent": "llm"})
+    assert r.status_code == 503
+    assert "ANTHROPIC_API_KEY" in r.json()["detail"]
+
+
 @pytest.mark.parametrize(
     "params",
     [

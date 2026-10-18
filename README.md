@@ -165,6 +165,12 @@ that gets embedded. The response's `interpretation` lists what was applied; pass
 to drop them, or `interpret=false` to turn this off. See
 [docs/how-it-works.md](docs/how-it-works.md#step-1-query-understanding).
 
+With `intent=llm` (the app's **Interpret with AI** toggle, off by default), Claude reads the query
+instead: it fixes typos and turns vague wording into fund language, so "chep well known Uk"
+becomes FTSE 100 index trackers, cheapest first. The response adds a plain-English `summary`.
+This needs `ANTHROPIC_API_KEY`. If the call fails, search falls back to the standard reading and
+says so in `interpretation.notice`.
+
 The fund itself is excluded by requesting `limit + 1` and dropping it. Scores are Atlas
 `vectorSearchScore`, so cosine is reported as `(1 + cos) / 2`; in `both` mode the score is the RRF
 score.
@@ -207,6 +213,8 @@ Vercel builds `Dockerfile.vercel` (Container Runtime, beta, available on Hobby) 
 | `PORT` | no | leave unset. The image listens on 80, Vercel's default; if you do set it, the container listens there |
 | `MONGODB_DB` | no | defaults to `fund_finder` |
 | `EMBED_MODEL` | no | defaults to `voyage-4`; must match the model in the `profile_auto` index |
+| `ANTHROPIC_API_KEY` | no | enables the **Interpret with AI** search option; without it the option is shown as unavailable |
+| `INTENT_MODEL` | no | defaults to `claude-haiku-5-5` |
 
 If `MONGODB_URI` is missing the app still starts, and `/health` returns 503 with
 `database not configured: set MONGODB_URI`.

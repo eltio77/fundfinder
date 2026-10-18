@@ -25,3 +25,13 @@ describe("ignored constraints in the URL", () => {
     expect(readQuery(new URLSearchParams(url)).ignore).toEqual(["is_passive", "not_region:UK"]);
   });
 });
+
+describe("AI interpretation mode in the URL", () => {
+  it("is off by default and round-trips as intent=llm", () => {
+    const settings = { limit: 10, numCandidates: null, exact: false };
+    expect(readQuery(new URLSearchParams("q=x")).ai).toBe(false);
+    const url = writeQuery("chep well known uk", {}, settings, "auto", [], true);
+    expect(url).toBe("?q=chep+well+known+uk&intent=llm");
+    expect(readQuery(new URLSearchParams(url)).ai).toBe(true);
+  });
+});

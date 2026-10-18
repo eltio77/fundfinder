@@ -246,6 +246,48 @@ Sector and region exclusions can't be pre-filters, because the indexes filter on
 fetches 3 × `limit` to still fill the page. Sector and region weights are fetched for this but left
 out of responses.
 
+### Optional: interpret with AI
+
+The rules above only read what is said explicitly. With `intent=llm` (the **Interpret with AI**
+toggle under the search box, off by default), `fundfinder/llm_intent.py` asks Claude
+(`claude-haiku-5-5` by default, set with `INTENT_MODEL`) to read the query instead. It can:
+
+- fix typos ("chep" means cheap);
+- turn vague or colloquial wording into fund language ("well known UK companies" means the FTSE
+  100; "safe" points to gilts);
+- pick an index the person clearly means, and keep only funds tracking it. This matters because
+  FTSE 100 and FTSE All-Share trackers are nearly identical by description, so similarity alone
+  can't separate them.
+
+```text
+"chep well known Uk"
+  -> searched for: "UK large companies index fund tracking the FTSE 100 Index"
+  -> Index funds only · Only share (equity) funds · Tracks the FTSE 100 · cheapest first
+  -> "Low-cost index funds that track the FTSE 100, the UK's 100 biggest companies, cheapest first."
+```
+
+How it's kept safe and predictable:
+
+- **One forced tool call** with a JSON schema, so the reply is always structured. The schema's
+  enums come from the data itself: asset classes, IA sectors and tracked indexes (fetched once
+  per process), plus the GICS sectors and regions.
+- **Everything is validated** before use. Unknown values, implausible costs (over 3%) and wrong
+  types are dropped, so a confused or manipulated reply can only narrow the search to real
+  options. The prompt also tells the model to treat the query as a description, not
+  instructions.
+- **Same result shape as the rules reading:** embedded text, filters, post-search filters and
+  removable chips, plus a suggested order and a one-line `summary`. `ignore`, explicit filters and
+  an explicit `sort` all still win.
+- **Cached per query.** The reading is cached in memory (512 queries, normalised for case and
+  spacing), so changing a filter or removing a chip doesn't call the model again.
+- **Falls back** to the rules reading if the call fails or times out (`INTENT_TIMEOUT_S`, default
+  10s), with an `interpretation.notice` explaining why. Without `ANTHROPIC_API_KEY`, `/meta`
+  reports `llm_intent.available: false`, the toggle is disabled, and `intent=llm` returns 503.
+
+Cost and abuse: each new query is one short Claude call. On a public deployment, anyone can
+trigger calls on your key. Keep Vercel deployment protection on, or add rate limiting, before
+sharing the URL widely.
+
 ### Step 2: vector search
 
 The pipeline (`vector_search_pipeline()` in `fundfinder/search.py`) is two stages:
@@ -270,6 +312,7 @@ The pipeline (`vector_search_pipeline()` in `fundfinder/search.py`) is two stage
 | `asset_class`, `ia_sector`, `ocf_max`, `is_passive` | none | Pre-filters |
 | `sort` (`/search` only) | `auto` | See [section 7](#7-ordering-by-cost) |
 | `interpret`, `ignore` (`/search` only) | `true`, none | Query understanding on or off, and inferences to drop (see above) |
+| `intent` (`/search` only) | `rules` | `llm` to have Claude read the query (see above) |
 
 **Scores.** Atlas returns `vectorSearchScore` in 0–1, which is `(1 + cosine) / 2`. So **0.5
 means unrelated** and 1 means identical. The UI turns scores into labels: "Strong match" at
@@ -426,6 +469,8 @@ variable.
 | `MONGODB_URI` | none | Required to serve data. Use a read-only user in production. |
 | `MONGODB_DB` | `fund_finder` | |
 | `EMBED_MODEL` | `voyage-4` | Must match the model in the `profile_auto` index |
+| `ANTHROPIC_API_KEY` | none | Optional; enables Interpret with AI |
+| `INTENT_MODEL`, `INTENT_TIMEOUT_S` | `claude-haiku-5-5`, 10 | Model and timeout for Interpret with AI |
 | `PORT` | 80 in the Docker image | Docker compose sets 8000 |
 | `VOYAGE_API_KEY` | none | Only for the local Atlas container; the app never uses it |
 
@@ -455,10 +500,11 @@ typecheck, Vitest and a production build for the web app.
   is the obvious next change.
 - **Weak exposure signal for bonds.** Adding bond-specific dimensions (duration, credit quality,
   government vs corporate split) would help.
-- **Query understanding is rule-based.** It handles common wording, not every phrasing, and it
-  has no region or IA-sector filters because the indexes don't filter on region. An LLM-based
-  parser could replace `interpret()` and return the same structure; adding a `main_region` filter
-  field to the indexes would allow hard region filters.
+- **Standard query understanding is rule-based.** It handles common wording, not every phrasing.
+  Interpret with AI covers vague wording, but it's opt-in, adds a model call (and its latency)
+  per new query, and can misread; the chips make each reading visible and removable. Neither
+  reading has hard region filters, because the indexes don't filter on region; adding a
+  `main_region` filter field would allow them.
 - **No performance or risk data.** Results say nothing about past returns, volatility or ratings.
 - **Scale.** At 300 funds ANN is effectively exact. With thousands of funds, tune `numCandidates`
   using the overlap report, and move off the Free tier's throughput limits.

@@ -62,6 +62,10 @@ const FAQ = [
     a: "Past performance, risk ratings, fund size and star ratings. It finds funds that are similar in what they do and what they hold; it doesn't judge whether they're good.",
   },
   {
+    q: "What does “Interpret with AI” do?",
+    a: "It's an optional mode, off by default. An AI model reads what you mean rather than just your words: it fixes typos and turns vague wording into specific funds, so “chep well known UK” finds cheap FTSE 100 trackers. It shows how it read your search, and you can remove anything it got wrong.",
+  },
+  {
     q: "Where does the data come from?",
     a: "The 300 funds here are made up (synthetic) for this prototype. Names, providers, costs and holdings are invented, but realistic for UK funds.",
   },

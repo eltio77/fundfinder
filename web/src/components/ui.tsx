@@ -154,14 +154,23 @@ export function Toggle({
   checked,
   onChange,
   children,
+  disabled = false,
+  title,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   children: ReactNode;
+  disabled?: boolean;
+  title?: string;
 }) {
   return (
-    <label className="toggle">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+    <label className={`toggle ${disabled ? "is-disabled" : ""}`} title={title}>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       <span className="toggle-track" aria-hidden>
         <span className="toggle-knob" />
       </span>
