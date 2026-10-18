@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     intent_model: str = "claude-haiku-5-5"
     intent_timeout_s: float = 10.0
 
+    # Abuse limits (fundfinder/ratelimit.py), per instance; 0 turns one off. Searches
+    # embed the query, so they cost Voyage quota; AI searches also call Claude. Repeat
+    # AI readings of the same query are cached but still count.
+    search_rate_per_min: int = 60  # per client IP: /search and /funds/{id}/similar
+    llm_rate_per_min: int = 20  # per client IP: intent=llm
+    llm_daily_budget: int = 1000  # all clients: intent=llm requests a day
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -353,3 +353,81 @@ def test_clusters(client, fake):
     assert client.get("/clusters").json() == {
         "trk_sp500": [{"id": "F1", "name": "A"}, {"id": "F2", "name": "B"}]
     }
+
+
+def _limited(client, **capacities):
+    from fundfinder.ratelimit import Limits, RateLimiter
+
+    limits = Limits.unlimited()
+    for name, capacity in capacities.items():
+        setattr(limits, name, RateLimiter(capacity))
+    client.app.state.limits = limits
+
+
+def test_search_rate_limited_per_client(client):
+    _limited(client, search=2)
+    assert client.get("/search", params={"q": "x"}).status_code == 200
+    assert client.get("/funds/F1/similar").status_code == 200
+    r = client.get("/search", params={"q": "x"})
+    assert r.status_code == 429
+    assert r.headers["retry-after"] == "30"
+    assert client.get("/funds/F1/similar").status_code == 429
+    assert client.get("/funds/F1").status_code == 200  # no embedding, not limited
+
+
+def test_llm_rate_limited_per_client_and_globally(fake):
+    async def facets():
+        return {}
+
+    fake.facets = facets
+    llm = FakeLlm()
+    with _llm_client(fake, llm) as c:
+        _limited(c, llm=1)
+        assert c.get("/search", params={"q": "a", "intent": "llm"}).status_code == 200
+        r = c.get("/search", params={"q": "b", "intent": "llm"})
+        assert r.status_code == 429 and "AI" in r.json()["detail"]
+        assert c.get("/search", params={"q": "c"}).status_code == 200  # rules still work
+
+        _limited(c, llm_budget=1)
+        assert c.get("/search", params={"q": "d", "intent": "llm"}).status_code == 200
+        r = c.get("/search", params={"q": "e", "intent": "llm"})
+        assert r.status_code == 429 and "budget" in r.json()["detail"]
+    assert llm.calls == ["a", "d"]
+
+
+def test_limits_come_from_settings(client):
+    s, limits = client.app.state.settings, client.app.state.limits
+    assert limits.search.capacity == s.search_rate_per_min
+    assert limits.llm.capacity == s.llm_rate_per_min
+    assert limits.llm_budget.capacity == s.llm_daily_budget
+    assert limits.llm_budget.rate == s.llm_daily_budget / 86400
+
+
+@pytest.mark.parametrize("fund_id", ["F%7B%7D", "a.b", "x" * 65, "F1%24ne"])
+def test_fund_id_format_validated(client, fake, fund_id):
+    assert client.get(f"/funds/{fund_id}").status_code == 422
+    assert client.get(f"/funds/{fund_id}/similar").status_code == 422
+    assert fake.calls == []
+
+
+def test_ignore_list_is_bounded(client):
+    params = {"q": "x", "ignore": [f"k{i}" for i in range(21)]}
+    assert client.get("/search", params=params).status_code == 422
+
+
+def test_security_headers(client):
+    r = client.get("/funds/F1")
+    assert r.headers["x-content-type-options"] == "nosniff"
+    assert r.headers["x-frame-options"] == "DENY"
+    assert r.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+    csp = r.headers["content-security-policy"]
+    assert "frame-ancestors 'none'" in csp and "script-src" not in csp
+    # Errors carry them too.
+    assert client.get("/funds/MISSING").headers["x-frame-options"] == "DENY"
+
+
+def test_docs_csp_allows_swagger_ui(client):
+    r = client.get("/docs")
+    assert r.status_code == 200
+    csp = r.headers["content-security-policy"]
+    assert "https://cdn.jsdelivr.net" in csp and "frame-ancestors 'none'" in csp

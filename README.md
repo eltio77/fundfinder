@@ -60,6 +60,8 @@ defaults to `claude-haiku-5-5` (`INTENT_MODEL`).
   changes and chip removals reuse a cached reading (about 0.2 s).
 - **Safety:** Claude's reply is checked against the values that exist in the data, so it can only
   narrow a search to real options.
+- **Cost:** AI searches are limited per client IP (`LLM_RATE_PER_MIN`) and in total
+  (`LLM_DAILY_BUDGET`); past either limit `/search?intent=llm` returns 429 with `Retry-After`.
 - **Fallback:** if the call fails, search uses the standard reading and says so.
 - **Cost:** on a public deployment anyone can trigger calls on your key, so keep deployment
   protection on.
@@ -276,6 +278,12 @@ Vercel builds `Dockerfile.vercel` (Container Runtime, beta, available on Hobby) 
 | `EMBED_MODEL` | no | defaults to `voyage-4`; must match the model in the `profile_auto` index |
 | `ANTHROPIC_API_KEY` | no | enables the **Interpret with AI** search option; without it the option is shown as unavailable |
 | `INTENT_MODEL` | no | defaults to `claude-haiku-5-5` |
+| `SEARCH_RATE_PER_MIN` | no | searches (`/search`, `/funds/{id}/similar`) per minute per client IP, default 60; 0 turns it off |
+| `LLM_RATE_PER_MIN` | no | AI searches per minute per client IP, default 20 |
+| `LLM_DAILY_BUDGET` | no | AI searches a day across all clients, default 1000 |
+
+The limits are kept in memory, so each running instance counts separately. Over a limit the API
+returns 429 with `Retry-After`.
 
 If `MONGODB_URI` is missing the app still starts, and `/health` returns 503 with
 `database not configured: set MONGODB_URI`.
