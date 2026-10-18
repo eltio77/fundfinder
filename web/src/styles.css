@@ -312,7 +312,7 @@ p {
   padding-top: 24px;
 }
 .hero-engaged .hero-title {
-  max-width: 24ch;
+  max-width: none;
   font-size: clamp(24px, 3vw, 32px);
 }
 .hero-engaged .hero-sub-wrap {

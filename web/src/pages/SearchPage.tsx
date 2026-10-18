@@ -52,21 +52,18 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
 
   return (
     <div className="stack">
-      <section className={`hero ${q ? "hero-compact" : engaged ? "hero-engaged" : ""}`}>
-        {!q && (
-          <>
-            <span className="pill pill-green">Plain-English fund search</span>
-            <h1 className="hero-title">
-              Find funds by <em>what they do</em>, not what they're called.
-            </h1>
-            <div className="hero-sub-wrap">
-              <p className="hero-sub">
-                Describe what you're looking for in your own words. Fund Finder reads every fund's
-                description and holdings to find the closest matches.
-              </p>
-            </div>
-          </>
-        )}
+      {/* The title stays; once you search or start typing it just gets smaller. */}
+      <section className={`hero ${q ? "hero-compact hero-engaged" : engaged ? "hero-engaged" : ""}`}>
+        <span className="pill pill-green">Plain-English fund search</span>
+        <h1 className="hero-title">
+          Find funds by <em>what they do</em>, not what they're called.
+        </h1>
+        <div className="hero-sub-wrap">
+          <p className="hero-sub">
+            Describe what you're looking for in your own words. Fund Finder reads every fund's
+            description and holdings to find the closest matches.
+          </p>
+        </div>
         <form className="hero-search" onSubmit={submit} role="search">
           <IconSearch width={22} height={22} />
           <input
