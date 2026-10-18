@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -9,6 +10,7 @@ from pymongo.errors import OperationFailure, PyMongoError
 from fundfinder.config import get_settings
 from fundfinder.db import make_client
 from fundfinder.routes import api, health
+from fundfinder.routes.web import WEB_DIST, mount_web
 
 log = logging.getLogger("fundfinder")
 
@@ -24,10 +26,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await app.state.mongo.close()
 
 
-def create_app() -> FastAPI:
+def create_app(web_dist: Path | None = WEB_DIST) -> FastAPI:
+    """web_dist=None gives an API-only app."""
     app = FastAPI(title="Fund Finder", lifespan=lifespan)
     app.include_router(health.router)
     app.include_router(api.router)
+    if web_dist is not None:
+        mount_web(app, web_dist)
 
     @app.exception_handler(PyMongoError)
     async def mongo_error(request: Request, exc: PyMongoError) -> JSONResponse:

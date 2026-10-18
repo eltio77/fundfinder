@@ -135,3 +135,32 @@ def test_embedding_rate_limit_returns_429():
     )
     assert r.status_code == 429
     assert r.headers["retry-after"] == "20"
+
+
+def test_meta(client, fake):
+    async def facets():
+        return {"ia_sectors": ["Global"], "asset_classes": ["Equity"]}
+
+    fake.facets = facets
+    body = client.get("/meta").json()
+    assert body["ia_sectors"] == ["Global"]
+    assert len(body["exposure_layout"]["sectors"]) == 11
+    assert body["defaults"]["candidates_per_result"] == 20
+
+
+def test_web_mount_serves_spa_routes(tmp_path):
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "app.js").write_text("console.log(1)")
+    (tmp_path / "index.html").write_text("<div id=root></div>")
+    (tmp_path / "favicon.svg").write_text("<svg/>")
+    app = create_app(web_dist=tmp_path)
+    with TestClient(app) as c:
+        assert c.get("/").text == "<div id=root></div>"
+        assert c.get("/fund/F0001").text == "<div id=root></div>"
+        assert c.get("/assets/app.js").status_code == 200
+
+
+def test_web_mount_skipped_without_build(tmp_path):
+    from fundfinder.routes.web import mount_web
+
+    assert mount_web(create_app(web_dist=None), tmp_path) is False

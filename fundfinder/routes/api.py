@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from fundfinder.db import FUNDS
 from fundfinder.search import (
+    CANDIDATES_PER_RESULT,
     MAX_LIMIT,
     MAX_NUM_CANDIDATES,
     Filters,
@@ -14,6 +15,7 @@ from fundfinder.search import (
     Mode,
     default_num_candidates,
 )
+from fundfinder.taxonomy import ASSET_CLASS_BREAKDOWN, GICS_SECTORS, REGIONS
 
 router = APIRouter()
 
@@ -128,3 +130,25 @@ async def get_fund(
         raise HTTPException(404, f"fund {fund_id} not found")
     fund["id"] = fund.pop("_id")
     return fund
+
+
+@router.get("/meta")
+async def meta(
+    request: Request, search: Annotated[FundSearch, Depends(get_search)]
+) -> dict[str, Any]:
+    """Filter options, exposure-vector layout and search defaults for clients."""
+    return {
+        **await search.facets(),
+        "exposure_layout": {
+            "sectors": GICS_SECTORS,
+            "regions": REGIONS,
+            "asset_classes": ASSET_CLASS_BREAKDOWN,
+        },
+        "embed_model": request.app.state.settings.embed_model,
+        "defaults": {
+            "limit": 10,
+            "max_limit": MAX_LIMIT,
+            "candidates_per_result": CANDIDATES_PER_RESULT,
+            "max_num_candidates": MAX_NUM_CANDIDATES,
+        },
+    }

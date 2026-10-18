@@ -18,7 +18,17 @@ MAX_LIMIT = 100
 # can promote funds that rank moderately well in both.
 FUSION_DEPTH_FACTOR = 2
 
-HIT_FIELDS = ("name", "provider", "ia_sector", "asset_class", "ocf", "is_passive", "tracked_index")
+HIT_FIELDS = (
+    "name",
+    "provider",
+    "ia_sector",
+    "asset_class",
+    "ocf",
+    "is_passive",
+    "tracked_index",
+    "cluster_id",
+    "exposure_vector",
+)
 
 
 class Mode(StrEnum):
@@ -57,6 +67,10 @@ class Hit(BaseModel):
     ocf: float
     is_passive: bool
     tracked_index: str | None = None
+    # Synthetic-data evaluation label; lets the UI mark same-cluster results.
+    cluster_id: str | None = None
+    # Returned so clients can show why two funds look alike (26 floats).
+    exposure_vector: list[float] | None = None
     score: float
     # Only in "both" mode: 1-based rank in each component list (None = absent).
     ranks: dict[str, int | None] | None = None
@@ -109,6 +123,13 @@ class FundSearch:
 
     async def get_fund(self, fund_id: str) -> dict[str, Any] | None:
         return await self.coll.find_one({"_id": fund_id})
+
+    async def facets(self) -> dict[str, list[str]]:
+        """Distinct values for the filter dropdowns."""
+        ia_sectors, asset_classes = await asyncio.gather(
+            self.coll.distinct("ia_sector"), self.coll.distinct("asset_class")
+        )
+        return {"ia_sectors": sorted(ia_sectors), "asset_classes": sorted(asset_classes)}
 
     async def search_text(
         self,
