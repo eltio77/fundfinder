@@ -6,23 +6,54 @@ Prototype similarity search over (synthetic) UK funds using MongoDB Atlas Vector
 
 ## Local run
 
-Prerequisites: [uv](https://docs.astral.sh/uv/), Docker, an Atlas Free cluster.
+Prerequisites: [uv](https://docs.astral.sh/uv/), Node 24, Docker.
+
+### Option A: everything in Docker, with local Atlas (no cloud cluster needed)
+
+`compose.yaml` runs `mongodb/mongodb-atlas-local:preview` (mongod + mongot with Vector Search and
+Automated Embedding) alongside the app. Embedding still calls Voyage, so put `VOYAGE_API_KEY` in
+`.env` first. For a key created directly at voyageai.com, also set
+`VOYAGE_EMBEDDING_PROVIDER_ENDPOINT=https://api.voyageai.com/v1/embeddings`.
 
 ```bash
-cp .env.example .env          # then fill in MONGODB_URI (and VOYAGE_API_KEY if using the fallback)
-uv sync
-uv run uvicorn fundfinder.main:app --reload    # http://localhost:8000/health
-# or
-docker compose up --build
+cp .env.example .env                                     # add VOYAGE_API_KEY
+docker compose up -d --build                             # mongo + app on http://localhost:8000
+docker compose run --rm app python -m scripts.seed
+docker compose run --rm app python -m scripts.indexes    # waits until READY
 ```
 
-## Checking Automated Embedding on your cluster
+With a free Voyage key (3 req/min, 10K tokens/min) the first `profile_auto` build takes about
+20 minutes. With a payment method on the key it takes about one minute.
+
+### Option B: develop with hot reload
 
 ```bash
-uv run python -m scripts.check_autoembed
+uv sync && (cd web && npm install)
+uv run uvicorn fundfinder.main:app --reload     # API on :8000 (uses MONGODB_URI from .env)
+cd web && npm run dev                           # UI on http://localhost:5173, proxies the API
 ```
 
-Creates a scratch autoEmbed index, runs an ANN and an exact query, and drops it again.
+To point the API or scripts at the local Docker Mongo instead of Atlas, prefix commands with
+`MONGODB_URI="mongodb://localhost:27017/?directConnection=true"`.
+
+## Frontend
+
+`web/` is a React 19 + TypeScript app built with Vite. The production build is baked into the
+same Docker image and served by FastAPI at `/` and `/fund/{id}`. There's no frontend server.
+
+- **Search:** free-text semantic search with filters and query settings (limit, numCandidates,
+  ANN/exact). All state lives in the URL, so searches can be shared.
+- **Fund page:** composition, plus the three similarity modes side by side. Hovering a fund
+  highlights it in every column. "Only cheaper" filters on OCF, and "Show test labels" ticks
+  results from the fund's synthetic cluster, with an n/m siblings count per column.
+- **Exposure fingerprint:** each 26-dim exposure vector drawn as a barcode (sectors | regions |
+  asset classes), so you can see why two funds are considered close.
+- **Rate limits:** a request throttled by Voyage (HTTP 429) retries itself with a visible
+  countdown.
+
+```bash
+cd web && npm run typecheck && npm test && npm run build
+```
 
 ## Data and seeding
 
@@ -66,7 +97,7 @@ Two of the three search/vector indexes a Free cluster allows:
 | `exposure_vec` | `vector`, 26 dims, cosine | `exposure_vector` | same |
 
 ```bash
-uv run python -m scripts.indexes          # create/update, then wait until READY (~2-5 min first time)
+uv run python -m scripts.indexes          # create/update, wait until READY (--timeout, default 30 min)
 ```
 
 The script is idempotent: missing indexes are created, changed definitions are updated in place,
@@ -104,4 +135,7 @@ score.
 
 ```bash
 uv run ruff check . && uv run ruff format --check . && uv run pytest
+(cd web && npm run typecheck && npm test)
 ```
+
+CI (GitHub Actions) runs both on every PR and on pushes to `main`.

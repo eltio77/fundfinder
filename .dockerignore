@@ -8,3 +8,5 @@
 tests
 reports
 .vercel
+web/node_modules
+web/dist

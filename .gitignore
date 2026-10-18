@@ -6,3 +6,5 @@ __pycache__/
 .ruff_cache/
 .vercel/
 .DS_Store
+web/node_modules/
+web/dist/
