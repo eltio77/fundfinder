@@ -1,0 +1,3702 @@
+{
+ "meta": {
+  "generated": "2026-10-18 09:11 UTC",
+  "database": "fund_finder",
+  "embed_model": "voyage-4",
+  "funds": 300,
+  "limit": 10,
+  "fusion_depth": 20,
+  "default_num_candidates": 200,
+  "num_candidates_grid": [
+   10,
+   20,
+   50,
+   100,
+   200,
+   500
+  ],
+  "client": "Darwin arm64, Python 3.12.15",
+  "rate_limited_retries": 0
+ },
+ "queries": [
+  {
+   "fund_id": "F0021",
+   "name": "Marlowe Tech Innovators",
+   "cluster_id": "act_global_tech",
+   "expected": [
+    "F0050",
+    "F0056",
+    "F0141"
+   ],
+   "ranked": {
+    "text": [
+     "F0226",
+     "F0018",
+     "F0050",
+     "F0141",
+     "F0056",
+     "F0279",
+     "F0213",
+     "F0232",
+     "F0299",
+     "F0191"
+    ],
+    "exposure": [
+     "F0056",
+     "F0050",
+     "F0226",
+     "F0129",
+     "F0098",
+     "F0213",
+     "F0279",
+     "F0141",
+     "F0055",
+     "F0232"
+    ],
+    "both": [
+     "F0226",
+     "F0050",
+     "F0056",
+     "F0141",
+     "F0279",
+     "F0213",
+     "F0018",
+     "F0129",
+     "F0098",
+     "F0232"
+    ]
+   },
+   "precision": {
+    "text": 0.6,
+    "exposure": 0.4,
+    "both": 0.6
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0050",
+   "name": "Ravensworth Technology Leaders",
+   "cluster_id": "act_global_tech",
+   "expected": [
+    "F0021",
+    "F0056",
+    "F0141"
+   ],
+   "ranked": {
+    "text": [
+     "F0141",
+     "F0299",
+     "F0021",
+     "F0279",
+     "F0056",
+     "F0191",
+     "F0226",
+     "F0129",
+     "F0018",
+     "F0213"
+    ],
+    "exposure": [
+     "F0279",
+     "F0098",
+     "F0021",
+     "F0141",
+     "F0056",
+     "F0213",
+     "F0129",
+     "F0055",
+     "F0226",
+     "F0018"
+    ],
+    "both": [
+     "F0141",
+     "F0279",
+     "F0021",
+     "F0056",
+     "F0299",
+     "F0098",
+     "F0129",
+     "F0213",
+     "F0226",
+     "F0191"
+    ]
+   },
+   "precision": {
+    "text": 0.6,
+    "exposure": 0.6,
+    "both": 0.6
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0016",
+   "name": "Ravensworth Japan Recovery",
+   "cluster_id": "act_japan_value",
+   "expected": [
+    "F0019",
+    "F0118",
+    "F0258"
+   ],
+   "ranked": {
+    "text": [
+     "F0258",
+     "F0122",
+     "F0170",
+     "F0019",
+     "F0118",
+     "F0158",
+     "F0245",
+     "F0039",
+     "F0045",
+     "F0152"
+    ],
+    "exposure": [
+     "F0118",
+     "F0019",
+     "F0045",
+     "F0122",
+     "F0152",
+     "F0176",
+     "F0165",
+     "F0039",
+     "F0170",
+     "F0240"
+    ],
+    "both": [
+     "F0118",
+     "F0122",
+     "F0019",
+     "F0170",
+     "F0045",
+     "F0258",
+     "F0152",
+     "F0039",
+     "F0176",
+     "F0240"
+    ]
+   },
+   "precision": {
+    "text": 0.6,
+    "exposure": 0.4,
+    "both": 0.4
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 0.6666666666666666,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0019",
+   "name": "Saltmarsh Japan Governance",
+   "cluster_id": "act_japan_value",
+   "expected": [
+    "F0016",
+    "F0118",
+    "F0258"
+   ],
+   "ranked": {
+    "text": [
+     "F0016",
+     "F0158",
+     "F0258",
+     "F0263",
+     "F0039",
+     "F0067",
+     "F0118",
+     "F0184",
+     "F0170",
+     "F0122"
+    ],
+    "exposure": [
+     "F0016",
+     "F0045",
+     "F0118",
+     "F0165",
+     "F0176",
+     "F0170",
+     "F0258",
+     "F0039",
+     "F0200",
+     "F0263"
+    ],
+    "both": [
+     "F0016",
+     "F0258",
+     "F0118",
+     "F0039",
+     "F0263",
+     "F0158",
+     "F0045",
+     "F0170",
+     "F0176",
+     "F0067"
+    ]
+   },
+   "precision": {
+    "text": 0.4,
+    "exposure": 0.4,
+    "both": 0.6
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0010",
+   "name": "Wexford Strategic Income",
+   "cluster_id": "act_strat_bond",
+   "expected": [
+    "F0047",
+    "F0057",
+    "F0181"
+   ],
+   "ranked": {
+    "text": [
+     "F0285",
+     "F0032",
+     "F0014",
+     "F0057",
+     "F0181",
+     "F0257",
+     "F0145",
+     "F0047",
+     "F0020",
+     "F0256"
+    ],
+    "exposure": [
+     "F0230",
+     "F0181",
+     "F0256",
+     "F0005",
+     "F0169",
+     "F0020",
+     "F0285",
+     "F0293",
+     "F0259",
+     "F0257"
+    ],
+    "both": [
+     "F0181",
+     "F0285",
+     "F0256",
+     "F0020",
+     "F0057",
+     "F0257",
+     "F0005",
+     "F0169",
+     "F0047",
+     "F0066"
+    ]
+   },
+   "precision": {
+    "text": 0.4,
+    "exposure": 0.2,
+    "both": 0.4
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 0.3333333333333333,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0047",
+   "name": "Holloway Unconstrained Bond",
+   "cluster_id": "act_strat_bond",
+   "expected": [
+    "F0010",
+    "F0057",
+    "F0181"
+   ],
+   "ranked": {
+    "text": [
+     "F0181",
+     "F0057",
+     "F0020",
+     "F0261",
+     "F0280",
+     "F0005",
+     "F0230",
+     "F0066",
+     "F0285",
+     "F0004"
+    ],
+    "exposure": [
+     "F0057",
+     "F0257",
+     "F0066",
+     "F0286",
+     "F0285",
+     "F0259",
+     "F0256",
+     "F0293",
+     "F0093",
+     "F0005"
+    ],
+    "both": [
+     "F0057",
+     "F0066",
+     "F0181",
+     "F0285",
+     "F0005",
+     "F0257",
+     "F0020",
+     "F0286",
+     "F0293",
+     "F0230"
+    ]
+   },
+   "precision": {
+    "text": 0.4,
+    "exposure": 0.2,
+    "both": 0.4
+   },
+   "recall": {
+    "text": 0.6666666666666666,
+    "exposure": 0.3333333333333333,
+    "both": 0.6666666666666666
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0052",
+   "name": "Brightwater UK Dividend",
+   "cluster_id": "act_uk_income",
+   "expected": [
+    "F0143",
+    "F0205",
+    "F0269"
+   ],
+   "ranked": {
+    "text": [
+     "F0143",
+     "F0124",
+     "F0266",
+     "F0192",
+     "F0205",
+     "F0269",
+     "F0166",
+     "F0252",
+     "F0222",
+     "F0094"
+    ],
+    "exposure": [
+     "F0143",
+     "F0205",
+     "F0269",
+     "F0214",
+     "F0252",
+     "F0222",
+     "F0235",
+     "F0192",
+     "F0212",
+     "F0266"
+    ],
+    "both": [
+     "F0143",
+     "F0205",
+     "F0269",
+     "F0192",
+     "F0124",
+     "F0266",
+     "F0252",
+     "F0222",
+     "F0235",
+     "F0166"
+    ]
+   },
+   "precision": {
+    "text": 0.4,
+    "exposure": 0.6,
+    "both": 0.6
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0143",
+   "name": "Brightwater UK Equity Income",
+   "cluster_id": "act_uk_income",
+   "expected": [
+    "F0052",
+    "F0205",
+    "F0269"
+   ],
+   "ranked": {
+    "text": [
+     "F0052",
+     "F0205",
+     "F0269",
+     "F0130",
+     "F0235",
+     "F0266",
+     "F0192",
+     "F0124",
+     "F0252",
+     "F0166"
+    ],
+    "exposure": [
+     "F0205",
+     "F0052",
+     "F0214",
+     "F0222",
+     "F0269",
+     "F0252",
+     "F0124",
+     "F0192",
+     "F0053",
+     "F0266"
+    ],
+    "both": [
+     "F0052",
+     "F0205",
+     "F0269",
+     "F0222",
+     "F0252",
+     "F0192",
+     "F0124",
+     "F0266",
+     "F0235",
+     "F0053"
+    ]
+   },
+   "precision": {
+    "text": 0.6,
+    "exposure": 0.6,
+    "both": 0.6
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0095",
+   "name": "Calder UK Emerging Leaders",
+   "cluster_id": "act_uk_smaller",
+   "expected": [
+    "F0097",
+    "F0185",
+    "F0300"
+   ],
+   "ranked": {
+    "text": [
+     "F0185",
+     "F0300",
+     "F0038",
+     "F0233",
+     "F0097",
+     "F0217",
+     "F0082",
+     "F0073",
+     "F0220",
+     "F0212"
+    ],
+    "exposure": [
+     "F0185",
+     "F0082",
+     "F0038",
+     "F0097",
+     "F0300",
+     "F0112",
+     "F0249",
+     "F0220",
+     "F0085",
+     "F0287"
+    ],
+    "both": [
+     "F0185",
+     "F0038",
+     "F0300",
+     "F0082",
+     "F0097",
+     "F0233",
+     "F0112",
+     "F0220",
+     "F0249",
+     "F0110"
+    ]
+   },
+   "precision": {
+    "text": 0.6,
+    "exposure": 0.6,
+    "both": 0.6
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0097",
+   "name": "Lowther UK Discovery",
+   "cluster_id": "act_uk_smaller",
+   "expected": [
+    "F0095",
+    "F0185",
+    "F0300"
+   ],
+   "ranked": {
+    "text": [
+     "F0185",
+     "F0220",
+     "F0217",
+     "F0038",
+     "F0233",
+     "F0300",
+     "F0095",
+     "F0082",
+     "F0112",
+     "F0253"
+    ],
+    "exposure": [
+     "F0300",
+     "F0095",
+     "F0082",
+     "F0038",
+     "F0185",
+     "F0220",
+     "F0112",
+     "F0233",
+     "F0249",
+     "F0085"
+    ],
+    "both": [
+     "F0185",
+     "F0300",
+     "F0220",
+     "F0038",
+     "F0095",
+     "F0082",
+     "F0233",
+     "F0112",
+     "F0217",
+     "F0110"
+    ]
+   },
+   "precision": {
+    "text": 0.2,
+    "exposure": 0.6,
+    "both": 0.6
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0040",
+   "name": "Kestrel UK 100 Tracker",
+   "cluster_id": "trk_ftse100",
+   "expected": [
+    "F0099",
+    "F0178",
+    "F0250",
+    "F0267"
+   ],
+   "ranked": {
+    "text": [
+     "F0178",
+     "F0250",
+     "F0267",
+     "F0099",
+     "F0287",
+     "F0268",
+     "F0085",
+     "F0247",
+     "F0249",
+     "F0161"
+    ],
+    "exposure": [
+     "F0250",
+     "F0099",
+     "F0267",
+     "F0178",
+     "F0268",
+     "F0161",
+     "F0247",
+     "F0085",
+     "F0287",
+     "F0110"
+    ],
+    "both": [
+     "F0250",
+     "F0178",
+     "F0099",
+     "F0267",
+     "F0268",
+     "F0287",
+     "F0085",
+     "F0247",
+     "F0161",
+     "F0231"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0099",
+   "name": "Holloway FTSE 100 Index Fund",
+   "cluster_id": "trk_ftse100",
+   "expected": [
+    "F0040",
+    "F0178",
+    "F0250",
+    "F0267"
+   ],
+   "ranked": {
+    "text": [
+     "F0178",
+     "F0250",
+     "F0267",
+     "F0040",
+     "F0268",
+     "F0214",
+     "F0287",
+     "F0247",
+     "F0085",
+     "F0161"
+    ],
+    "exposure": [
+     "F0178",
+     "F0250",
+     "F0267",
+     "F0040",
+     "F0268",
+     "F0247",
+     "F0161",
+     "F0287",
+     "F0085",
+     "F0231"
+    ],
+    "both": [
+     "F0178",
+     "F0250",
+     "F0267",
+     "F0040",
+     "F0268",
+     "F0247",
+     "F0287",
+     "F0161",
+     "F0085",
+     "F0214"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0085",
+   "name": "Brightwater All-Share Index",
+   "cluster_id": "trk_ftse_allshare",
+   "expected": [
+    "F0161",
+    "F0247",
+    "F0268",
+    "F0287"
+   ],
+   "ranked": {
+    "text": [
+     "F0268",
+     "F0247",
+     "F0287",
+     "F0161",
+     "F0099",
+     "F0267",
+     "F0178",
+     "F0250",
+     "F0040",
+     "F0270"
+    ],
+    "exposure": [
+     "F0161",
+     "F0287",
+     "F0268",
+     "F0247",
+     "F0250",
+     "F0267",
+     "F0178",
+     "F0099",
+     "F0040",
+     "F0110"
+    ],
+    "both": [
+     "F0268",
+     "F0161",
+     "F0287",
+     "F0247",
+     "F0267",
+     "F0099",
+     "F0250",
+     "F0178",
+     "F0040",
+     "F0231"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 0.9,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0161",
+   "name": "Wexford FTSE All-Share Index Fund",
+   "cluster_id": "trk_ftse_allshare",
+   "expected": [
+    "F0085",
+    "F0247",
+    "F0268",
+    "F0287"
+   ],
+   "ranked": {
+    "text": [
+     "F0268",
+     "F0287",
+     "F0085",
+     "F0247",
+     "F0250",
+     "F0267",
+     "F0178",
+     "F0099",
+     "F0108",
+     "F0040"
+    ],
+    "exposure": [
+     "F0287",
+     "F0085",
+     "F0268",
+     "F0247",
+     "F0250",
+     "F0267",
+     "F0178",
+     "F0099",
+     "F0040",
+     "F0110"
+    ],
+    "both": [
+     "F0287",
+     "F0268",
+     "F0085",
+     "F0247",
+     "F0250",
+     "F0267",
+     "F0178",
+     "F0099",
+     "F0040",
+     "F0108"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0034",
+   "name": "Ravensworth UK Government Bond Index",
+   "cluster_id": "trk_ftse_gilts",
+   "expected": [
+    "F0043",
+    "F0115",
+    "F0127",
+    "F0179"
+   ],
+   "ranked": {
+    "text": [
+     "F0043",
+     "F0115",
+     "F0127",
+     "F0179",
+     "F0243",
+     "F0150",
+     "F0203",
+     "F0060",
+     "F0208",
+     "F0011"
+    ],
+    "exposure": [
+     "F0179",
+     "F0208",
+     "F0115",
+     "F0150",
+     "F0043",
+     "F0127",
+     "F0203",
+     "F0060",
+     "F0243",
+     "F0011"
+    ],
+    "both": [
+     "F0179",
+     "F0115",
+     "F0043",
+     "F0127",
+     "F0150",
+     "F0208",
+     "F0243",
+     "F0203",
+     "F0060",
+     "F0011"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.6,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0043",
+   "name": "Halden UK Government Bond Index",
+   "cluster_id": "trk_ftse_gilts",
+   "expected": [
+    "F0034",
+    "F0115",
+    "F0127",
+    "F0179"
+   ],
+   "ranked": {
+    "text": [
+     "F0034",
+     "F0127",
+     "F0115",
+     "F0243",
+     "F0179",
+     "F0150",
+     "F0060",
+     "F0117",
+     "F0208",
+     "F0011"
+    ],
+    "exposure": [
+     "F0127",
+     "F0203",
+     "F0034",
+     "F0208",
+     "F0179",
+     "F0115",
+     "F0243",
+     "F0150",
+     "F0060",
+     "F0011"
+    ],
+    "both": [
+     "F0127",
+     "F0034",
+     "F0115",
+     "F0179",
+     "F0243",
+     "F0203",
+     "F0208",
+     "F0150",
+     "F0060",
+     "F0117"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.6,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0072",
+   "name": "Lowther Global Aggregate Bond Index",
+   "cluster_id": "trk_global_agg",
+   "expected": [
+    "F0134",
+    "F0193",
+    "F0229",
+    "F0277"
+   ],
+   "ranked": {
+    "text": [
+     "F0277",
+     "F0229",
+     "F0193",
+     "F0134",
+     "F0209",
+     "F0087",
+     "F0261",
+     "F0286",
+     "F0043",
+     "F0251"
+    ],
+    "exposure": [
+     "F0134",
+     "F0193",
+     "F0229",
+     "F0277",
+     "F0261",
+     "F0013",
+     "F0087",
+     "F0209",
+     "F0251",
+     "F0017"
+    ],
+    "both": [
+     "F0277",
+     "F0134",
+     "F0229",
+     "F0193",
+     "F0261",
+     "F0209",
+     "F0087",
+     "F0251",
+     "F0013",
+     "F0088"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0134",
+   "name": "Brightwater Global Bond Tracker",
+   "cluster_id": "trk_global_agg",
+   "expected": [
+    "F0072",
+    "F0193",
+    "F0229",
+    "F0277"
+   ],
+   "ranked": {
+    "text": [
+     "F0193",
+     "F0072",
+     "F0229",
+     "F0277",
+     "F0087",
+     "F0261",
+     "F0209",
+     "F0005",
+     "F0119",
+     "F0043"
+    ],
+    "exposure": [
+     "F0229",
+     "F0193",
+     "F0072",
+     "F0277",
+     "F0261",
+     "F0013",
+     "F0087",
+     "F0209",
+     "F0251",
+     "F0017"
+    ],
+    "both": [
+     "F0193",
+     "F0229",
+     "F0072",
+     "F0277",
+     "F0261",
+     "F0087",
+     "F0209",
+     "F0013",
+     "F0251",
+     "F0005"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0033",
+   "name": "Wexford Developed World Index",
+   "cluster_id": "trk_msci_world",
+   "expected": [
+    "F0036",
+    "F0186",
+    "F0198",
+    "F0241"
+   ],
+   "ranked": {
+    "text": [
+     "F0215",
+     "F0198",
+     "F0241",
+     "F0036",
+     "F0186",
+     "F0168",
+     "F0270",
+     "F0120",
+     "F0121",
+     "F0174"
+    ],
+    "exposure": [
+     "F0198",
+     "F0186",
+     "F0036",
+     "F0241",
+     "F0168",
+     "F0202",
+     "F0049",
+     "F0296",
+     "F0215",
+     "F0173"
+    ],
+    "both": [
+     "F0198",
+     "F0186",
+     "F0241",
+     "F0036",
+     "F0215",
+     "F0168",
+     "F0049",
+     "F0120",
+     "F0202",
+     "F0061"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0036",
+   "name": "Clarendon World Equity Tracker",
+   "cluster_id": "trk_msci_world",
+   "expected": [
+    "F0033",
+    "F0186",
+    "F0198",
+    "F0241"
+   ],
+   "ranked": {
+    "text": [
+     "F0198",
+     "F0241",
+     "F0033",
+     "F0186",
+     "F0183",
+     "F0168",
+     "F0270",
+     "F0121",
+     "F0215",
+     "F0044"
+    ],
+    "exposure": [
+     "F0198",
+     "F0186",
+     "F0241",
+     "F0033",
+     "F0168",
+     "F0202",
+     "F0049",
+     "F0029",
+     "F0120",
+     "F0236"
+    ],
+    "both": [
+     "F0198",
+     "F0241",
+     "F0186",
+     "F0033",
+     "F0168",
+     "F0215",
+     "F0049",
+     "F0121",
+     "F0061",
+     "F0183"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0001",
+   "name": "Kestrel S&P 500 Index Fund",
+   "cluster_id": "trk_sp500",
+   "expected": [
+    "F0044",
+    "F0174",
+    "F0219",
+    "F0237"
+   ],
+   "ranked": {
+    "text": [
+     "F0174",
+     "F0237",
+     "F0219",
+     "F0114",
+     "F0044",
+     "F0036",
+     "F0172",
+     "F0186",
+     "F0265",
+     "F0198"
+    ],
+    "exposure": [
+     "F0219",
+     "F0237",
+     "F0174",
+     "F0044",
+     "F0114",
+     "F0131",
+     "F0225",
+     "F0238",
+     "F0172",
+     "F0058"
+    ],
+    "both": [
+     "F0174",
+     "F0219",
+     "F0237",
+     "F0114",
+     "F0044",
+     "F0172",
+     "F0265",
+     "F0298",
+     "F0059",
+     "F0078"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.8,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  },
+  {
+   "fund_id": "F0044",
+   "name": "Halden US 500 Tracker",
+   "cluster_id": "trk_sp500",
+   "expected": [
+    "F0001",
+    "F0174",
+    "F0219",
+    "F0237"
+   ],
+   "ranked": {
+    "text": [
+     "F0237",
+     "F0219",
+     "F0174",
+     "F0001",
+     "F0114",
+     "F0036",
+     "F0172",
+     "F0106",
+     "F0198",
+     "F0186"
+    ],
+    "exposure": [
+     "F0114",
+     "F0001",
+     "F0219",
+     "F0237",
+     "F0059",
+     "F0174",
+     "F0238",
+     "F0265",
+     "F0225",
+     "F0131"
+    ],
+    "both": [
+     "F0237",
+     "F0219",
+     "F0114",
+     "F0001",
+     "F0174",
+     "F0172",
+     "F0106",
+     "F0238",
+     "F0298",
+     "F0007"
+    ]
+   },
+   "precision": {
+    "text": 0.8,
+    "exposure": 0.6,
+    "both": 0.8
+   },
+   "recall": {
+    "text": 1.0,
+    "exposure": 1.0,
+    "both": 1.0
+   },
+   "overlap": {
+    "text": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    },
+    "exposure": {
+     "10": 1.0,
+     "20": 1.0,
+     "50": 1.0,
+     "100": 1.0,
+     "200": 1.0,
+     "500": 1.0
+    }
+   },
+   "fused_matches_api": true
+  }
+ ],
+ "outliers": [
+  {
+   "fund_id": "F0113",
+   "name": "Lowther Biotechnology",
+   "cluster_id": "outlier_biotech",
+   "text_top1": 0.8083211183547974,
+   "text_top1_name": "Lowther Worldwide",
+   "exposure_top1": 0.9276366233825684,
+   "exposure_top1_name": "Ravensworth Worldwide"
+  },
+  {
+   "fund_id": "F0221",
+   "name": "Pennine UK Commercial Property",
+   "cluster_id": "outlier_direct_property",
+   "text_top1": 0.8027487993240356,
+   "text_top1_name": "Fenwick Real Estate",
+   "exposure_top1": 0.9743161201477051,
+   "exposure_top1_name": "Halden Real Estate"
+  },
+  {
+   "fund_id": "F0100",
+   "name": "Saltmarsh Frontier Markets",
+   "cluster_id": "outlier_frontier",
+   "text_top1": 0.7969554662704468,
+   "text_top1_name": "Severn Emerging Markets Growth",
+   "exposure_top1": 0.979439377784729,
+   "exposure_top1_name": "Fenwick Global Emerging Markets"
+  },
+  {
+   "fund_id": "F0074",
+   "name": "Kestrel Gold & Precious Metals",
+   "cluster_id": "outlier_gold",
+   "text_top1": 0.8020921945571899,
+   "text_top1_name": "Holloway Global Resources",
+   "exposure_top1": 0.9486069083213806,
+   "exposure_top1_name": "Ashcombe Natural Resources"
+  },
+  {
+   "fund_id": "F0075",
+   "name": "Wexford India Opportunities",
+   "cluster_id": "outlier_india",
+   "text_top1": 0.8086100816726685,
+   "text_top1_name": "Halden FTSE Emerging Index Fund",
+   "exposure_top1": 0.9956583380699158,
+   "exposure_top1_name": "Halden FTSE Emerging Index Fund"
+  }
+ ],
+ "clustered_top1": {
+  "text": 0.8732031990181316,
+  "exposure": 0.9996172704479911
+ },
+ "calls": [
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 234.20754200196825
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 64.07216600200627
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 262.41108299291227
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 708.6667920084437
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 216.03104200039525
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 227.6062919991091
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 242.22133299917914
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 211.73958299914375
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 215.799124998739
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 206.6360829921905
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 51.46670799877029
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 39.22445799980778
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 41.72858399397228
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 35.3939589986112
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 37.53545800282154
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.374665992800146
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 37.672167003620416
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 216.0820420103846
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 35.61808398808353
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 241.57525000919122
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 240.8426670008339
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 210.76320900465362
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 213.30116600438487
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 210.42500001203734
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 225.87183400173672
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 217.83512498950586
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 210.22491599433124
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 34.746333010843955
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 38.31795799487736
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 33.86987499834504
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 31.972207987564616
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 32.49233300448395
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 35.41587499785237
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 36.212542006978765
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 209.2988329968648
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 38.10391700244509
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 251.00879099045414
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 215.21520800888538
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 213.75254199665505
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 215.66674999485258
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 223.28533299150877
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 207.95837500190828
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 206.539958002395
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 209.85012500023004
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 35.0963750097435
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 34.56641599768773
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 33.704665998811834
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 38.01754199957941
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 38.14633400179446
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.04966599191539
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 32.472874998347834
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 213.92362500773743
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 37.46783299720846
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 257.87908300117124
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 207.64241700817365
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 201.94683400040958
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 209.87112500006333
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 198.46149999648333
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 211.42233299906366
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 217.5572920095874
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 214.86391700454988
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 33.010999992256984
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 39.23558400128968
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 36.03291699255351
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 33.762540988391265
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 34.41137500340119
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.10483299335465
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 34.97462499944959
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 466.2399169901619
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.682209013728425
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 248.49862499104347
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 225.95725000428502
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 196.73216600494925
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 204.23233399924356
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 203.8820830057375
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 213.95299999858253
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 203.79100000718608
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 213.88333399954718
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 31.539082992821932
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 33.85408398753498
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.47687499667518
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 33.354125000187196
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 33.67458299908321
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.757125002215616
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 34.253667006851174
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 209.25708299910184
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 36.99733299436048
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 236.637084002723
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 202.03745900653303
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 209.22566700028256
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 214.97258299496025
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 202.39554200088605
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 201.20966598915402
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 204.2156670067925
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 213.0608330044197
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 34.62474999832921
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 34.55470799235627
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 33.11704199586529
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 31.542791999527253
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 31.950457996572368
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.61270798975602
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 34.07954100111965
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 203.57591600622982
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.32874999998603
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 234.7296660009306
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 208.72508399770595
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 206.56849999795668
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 206.5909999946598
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 311.3157919869991
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 218.69570898707025
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 206.8096660077572
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 208.80883300560527
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 33.49220899690408
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 35.657917003845796
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 33.590084000024945
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 35.3657500090776
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 39.00916599377524
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 33.648874989012256
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 35.485750006046146
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 221.13249999529216
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 39.31995799939614
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 239.16700000700075
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 220.47679200477432
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 207.47750000737142
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 218.19733300071675
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 215.2441250073025
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 205.71016600297298
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 206.1997499986319
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 214.71129098790698
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 33.393041012459435
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 32.84054099640343
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 31.794916998478584
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 34.42866599652916
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 34.302750005736016
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.28645799390506
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 30.632708003395237
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 218.07291700679343
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 54.062625000369735
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 247.16995800554287
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 215.68754200416151
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 228.5157500009518
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 220.25300000677817
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 218.0731249973178
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 204.5717080036411
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 209.0687090094434
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 204.97270800115075
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 45.41870899265632
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 35.46937499777414
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.09641699201893
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 32.421540992800146
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 33.20674999849871
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 33.00383400346618
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 33.98545800882857
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 205.0564170058351
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 33.7105830112705
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 245.4661249939818
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 214.3605830060551
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 206.10741700511426
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 209.7858330089366
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 205.6309589970624
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 204.4427920045564
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 210.54095799627248
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 210.12408300885
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 35.240167009760626
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 35.675124992849305
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.60862499580253
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 31.89770800236147
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 33.34912499121856
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 37.03245898941532
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 38.89237499970477
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 203.3411669981433
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.384624995756894
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 231.89887500484474
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 205.39620899944566
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 204.005708990735
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 205.95687499735504
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 200.3756249905564
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 205.25283300958108
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 213.69679100462236
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 213.34454200405162
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 34.83166599471588
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 35.274000008939765
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 37.39641699939966
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 32.94716600794345
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 36.21916699921712
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 33.54725000099279
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 35.182667008484714
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 210.0129169994034
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 35.563875004299916
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 246.63904200133402
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 204.96724999975413
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 210.5633329920238
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 214.3547919986304
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 200.6676669989247
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 214.45137499540579
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 206.9534170004772
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 208.25224999862257
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 34.46241699566599
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 36.207917000865564
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.06624999863561
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 39.0102920064237
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 32.9145829891786
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 31.836624999414198
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 34.644083003513515
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 209.67858299263753
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 35.162540996680036
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 237.30866599362344
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 202.60120800230652
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 203.19066700176336
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 208.85783300036564
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 219.340583003941
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 206.18316599575337
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 198.82274999690708
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 211.13879200129304
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 34.03279201302212
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 35.93225000076927
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 38.408499996876344
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 34.181625000201166
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 32.52616600366309
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.93245800200384
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 36.00437499699183
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 206.10599999781698
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 38.723208010196686
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 240.16045799362473
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 215.19883400469553
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 214.176250010496
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 216.7519170034211
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 210.24791699892376
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 208.72312498977408
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 214.67945800395682
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 225.9178329986753
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 30.734583997400478
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 34.0391659992747
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 31.89483300957363
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 34.28091699606739
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 38.86466700350866
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.31120901182294
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 32.40079199895263
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 209.14275001268834
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 39.078332993085496
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 236.11379199428484
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 212.9029579955386
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 196.21316700067837
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 203.68254100321792
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 206.79654099512845
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 220.75870900880545
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 211.44429199921433
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 209.4890409935033
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 31.931374993291683
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 31.931290999636985
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 34.8488330055261
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 42.00395900988951
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 37.13708299619611
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 33.5355410061311
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 33.02416700171307
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 207.2170829924289
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 41.31845899973996
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 251.610791994608
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 208.75758299371228
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 215.7382909936132
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 196.32633299625013
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 210.35770801245235
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 198.074790998362
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 200.8950419985922
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 203.77179099887144
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 32.21420799673069
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 31.285042001400143
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.379416003706865
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 34.41516699967906
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 35.22658300062176
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.962833000463434
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 33.288624996203
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 206.56349998898804
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 36.47016698960215
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 239.28999999770895
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 202.5801669951761
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 216.4600830001291
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 207.1396669925889
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 203.6291669937782
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 203.79779099312145
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 197.22570799058303
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 205.81250000395812
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 33.06079100002535
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 34.099791999324225
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 34.781666996423155
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 32.53633300482761
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 34.22699999646284
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 31.962334003765136
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 33.37891699629836
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 207.90208400285337
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.61929099285044
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 227.16774999571498
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 203.0288749956526
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 191.57979199371766
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 197.8599169960944
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 213.02508399821818
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 205.21508299862035
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 202.07600000139792
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 207.1044579934096
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 38.679083008901216
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 37.70849999273196
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 32.20287499425467
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 41.8159170076251
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 33.916250002221204
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 36.98274999624118
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 45.10383399610873
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 213.9930830016965
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.3788339960156
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 232.18879199703224
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 209.63712500815745
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 210.4129590006778
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 207.88745800382458
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 209.55149999645073
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 203.09129099769052
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 205.14483298757114
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 205.8105420001084
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 31.708499998785555
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 32.82695899542887
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.35949999059085
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 31.57462499802932
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 32.281082996632904
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.94975000608247
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 37.3230830009561
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 210.66462498856708
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 36.25020800973289
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 236.21770800673403
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 204.08904200303368
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 201.77674999285955
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 209.17120898957364
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 205.26908298779745
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 443.6627090035472
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 199.19250000384636
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 204.64174999506213
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 36.41449999122415
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 40.86283400829416
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.07216600701213
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 35.100665991194546
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 37.9513749940088
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 31.219125012285076
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 39.79466701275669
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 198.3218749955995
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 36.20629099896178
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 227.1954169991659
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 208.23004099656828
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 217.26883300289046
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 197.27575000433717
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 208.17249998799525
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 213.3963750093244
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 201.69674999488052
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 211.53854200383648
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 39.06087500217836
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 33.97987499192823
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 35.77204199973494
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 36.89295900403522
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 35.28429199650418
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 35.08645799593069
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 34.0473749965895
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 208.02325000113342
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 35.440957988612354
+  },
+  {
+   "kind": "both (API)",
+   "search": "ANN nc=200",
+   "ms": 240.23387501074467
+  },
+  {
+   "kind": "text",
+   "search": "exact",
+   "ms": 224.50679099711124
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=10",
+   "ms": 205.67066699732095
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=20",
+   "ms": 206.02050000161398
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=50",
+   "ms": 230.2217499964172
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=100",
+   "ms": 205.5750830040779
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 213.57991600234527
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=500",
+   "ms": 207.68216700525954
+  },
+  {
+   "kind": "exposure",
+   "search": "exact",
+   "ms": 33.70066700153984
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=10",
+   "ms": 41.6689999983646
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=20",
+   "ms": 39.30733400920872
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=50",
+   "ms": 33.66450000612531
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=100",
+   "ms": 32.89029099687468
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.84208299778402
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=500",
+   "ms": 33.46837499702815
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 199.45395799004473
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 30.16275000118185
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 211.90258298884146
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.177874993067235
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 208.02975000697188
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 30.19216700340621
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 200.09079099691007
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 32.38133300328627
+  },
+  {
+   "kind": "text",
+   "search": "ANN nc=200",
+   "ms": 209.80262500233948
+  },
+  {
+   "kind": "exposure",
+   "search": "ANN nc=200",
+   "ms": 34.61195799172856
+  }
+ ]
+}

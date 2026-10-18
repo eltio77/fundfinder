@@ -147,6 +147,32 @@ The fund itself is excluded by requesting `limit + 1` and dropping it. Scores ar
 `vectorSearchScore`, so cosine is reported as `(1 + cos) / 2`; in `both` mode the score is the RRF
 score.
 
+## Evaluation
+
+```bash
+uv run python -m scripts.eval                          # writes reports/eval.md + reports/eval.json
+uv run python -m scripts.eval --from-json reports/eval.json   # re-render without querying
+```
+
+There are 22 labelled query funds: 2 from each tracker and near-duplicate cluster. Each fund's
+expected neighbours are the other members of its cluster. The script reports:
+
+- precision@5 (with its ceiling) and recall@10 for text, exposure and both
+- ANN vs exact overlap@10 at numCandidates of 10–500
+- p50/p95 latency per call type
+- how outliers score against clustered funds
+
+`both` is fused locally with the API's own RRF and cross-checked against real `mode=both` calls.
+A full run makes about 200 Voyage calls, so it needs a Voyage key with a payment method.
+
+Latest run ([reports/eval.md](reports/eval.md), Atlas Free cluster):
+
+| | P@5 (ceiling 0.71) | R@10 | p50 latency |
+|---|---:|---:|---:|
+| text | 0.65 | 0.98 | 208 ms |
+| exposure | 0.62 | 0.92 | 35 ms |
+| both | **0.68** | **0.98** | 240 ms (API) |
+
 ## Development
 
 ```bash

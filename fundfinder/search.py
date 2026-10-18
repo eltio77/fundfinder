@@ -163,7 +163,7 @@ class FundSearch:
             )
         )
 
-    async def _neighbours(
+    async def neighbours(
         self,
         fund: dict[str, Any],
         mode: Mode,
@@ -217,13 +217,13 @@ class FundSearch:
             return None
         opts = {"num_candidates": num_candidates, "filters": filters, "exact": exact}
         if mode is not Mode.both:
-            return await self._neighbours(fund, mode, limit=limit, **opts)
+            return await self.neighbours(fund, mode, limit=limit, **opts)
 
         depth = limit * FUSION_DEPTH_FACTOR
         opts["num_candidates"] = max(num_candidates or default_num_candidates(limit), depth + 1)
         text_hits, exposure_hits = await asyncio.gather(
-            self._neighbours(fund, Mode.text, limit=depth, **opts),
-            self._neighbours(fund, Mode.exposure, limit=depth, **opts),
+            self.neighbours(fund, Mode.text, limit=depth, **opts),
+            self.neighbours(fund, Mode.exposure, limit=depth, **opts),
         )
         return fuse(text_hits, exposure_hits)[:limit]
 
