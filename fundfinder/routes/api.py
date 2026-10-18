@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from fundfinder.db import FUNDS, get_db
+from fundfinder.intent import Sort, resolve_sort
 from fundfinder.search import (
     CANDIDATES_PER_RESULT,
     MAX_LIMIT,
@@ -60,6 +61,8 @@ class SearchResponse(BaseModel):
     query: str | None = None
     fund_id: str | None = None
     mode: Mode | None = None
+    # Order of `results`: "cost" = ascending OCF, otherwise similarity.
+    sort: Sort = Sort.relevance
     limit: int
     num_candidates: int | None
     exact: bool
@@ -87,6 +90,10 @@ async def search(
     search: Annotated[FundSearch, Depends(get_search)],
     filters: Annotated[Filters, Depends(get_filters)],
     params: Annotated[SearchParams, Depends(get_params)],
+    sort: Annotated[
+        Sort,
+        Query(description="auto: lowest annual cost first if the query asks for low cost"),
+    ] = Sort.auto,
 ) -> SearchResponse:
     started = time.perf_counter()
     hits = await search.search_text(
@@ -96,7 +103,11 @@ async def search(
         filters=filters,
         exact=params.exact,
     )
-    return _response(params, filters, started, query=q, results=hits)
+    order = resolve_sort(sort, q)
+    if order is Sort.cost:
+        # Re-orders the best matches only; stable, so equal costs keep match order.
+        hits.sort(key=lambda h: h.ocf)
+    return _response(params, filters, started, query=q, sort=order, results=hits)
 
 
 @router.get("/funds/{fund_id}/similar", response_model=SearchResponse)

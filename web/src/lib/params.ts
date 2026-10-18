@@ -1,10 +1,11 @@
-import type { Filters, SearchSettings } from "./api";
+import type { Filters, SearchSettings, Sort } from "./api";
 
 export const DEFAULT_LIMIT = 10;
 
 /** Read filters + settings from URL params (search page state lives in the URL). */
 export function readQuery(params: URLSearchParams): {
   q: string;
+  sort: Sort;
   filters: Filters;
   settings: SearchSettings;
 } {
@@ -15,8 +16,10 @@ export function readQuery(params: URLSearchParams): {
     return Number.isFinite(n) ? n : undefined;
   };
   const passive = params.get("is_passive");
+  const sort = params.get("sort");
   return {
     q: params.get("q") ?? "",
+    sort: sort === "relevance" || sort === "cost" ? sort : "auto",
     filters: {
       asset_class: params.get("asset_class") || undefined,
       ia_sector: params.get("ia_sector") || undefined,
@@ -31,9 +34,15 @@ export function readQuery(params: URLSearchParams): {
   };
 }
 
-export function writeQuery(q: string, filters: Filters, settings: SearchSettings): string {
+export function writeQuery(
+  q: string,
+  filters: Filters,
+  settings: SearchSettings,
+  sort: Sort = "auto",
+): string {
   const p = new URLSearchParams();
   if (q) p.set("q", q);
+  if (sort !== "auto") p.set("sort", sort);
   if (filters.asset_class) p.set("asset_class", filters.asset_class);
   if (filters.ia_sector) p.set("ia_sector", filters.ia_sector);
   if (filters.ocf_max !== undefined) p.set("ocf_max", String(filters.ocf_max));

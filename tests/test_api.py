@@ -7,10 +7,10 @@ from fundfinder.routes.api import get_search
 from fundfinder.search import Hit, Mode
 
 
-def make_hit(fid: str, score: float = 0.8) -> Hit:
+def make_hit(fid: str, score: float = 0.8, ocf: float = 0.4) -> Hit:
     return Hit(
         id=fid, name=f"Fund {fid}", provider="P", ia_sector="Global", asset_class="Equity",
-        ocf=0.4, is_passive=False, score=score,
+        ocf=ocf, is_passive=False, score=score,
     )  # fmt: skip
 
 
@@ -23,7 +23,7 @@ class FakeSearch:
         if self.fail:
             raise OperationFailure(self.fail)
         self.calls.append(("search", q, kw))
-        return [make_hit("F2", 0.9), make_hit("F3", 0.7)]
+        return [make_hit("F2", 0.9), make_hit("F3", 0.7, ocf=0.1), make_hit("F4", 0.6)]
 
     async def similar(self, fund_id, mode, **kw):
         self.calls.append(("similar", fund_id, mode, kw))
@@ -50,11 +50,33 @@ def test_search_returns_results_and_defaults(client, fake):
     r = client.get("/search", params={"q": "uk dividend"})
     assert r.status_code == 200
     body = r.json()
-    assert [h["id"] for h in body["results"]] == ["F2", "F3"]
+    assert [h["id"] for h in body["results"]] == ["F2", "F3", "F4"]
+    assert body["sort"] == "relevance"
     assert body["limit"] == 10 and body["num_candidates"] == 200 and body["exact"] is False
     _, q, kw = fake.calls[0]
     assert q == "uk dividend"
     assert kw["limit"] == 10 and kw["num_candidates"] is None
+
+
+@pytest.mark.parametrize("q", ["lowest cost global tracker", "a cheap UK fund"])
+def test_low_cost_query_sorts_by_annual_cost(client, q):
+    body = client.get("/search", params={"q": q}).json()
+    assert body["sort"] == "cost"
+    # Cheapest first; equal costs keep match order.
+    assert [h["id"] for h in body["results"]] == ["F3", "F2", "F4"]
+
+
+@pytest.mark.parametrize(
+    ("q", "sort", "expected"),
+    [
+        ("lowest cost tracker", "relevance", ["F2", "F3", "F4"]),
+        ("uk dividend", "cost", ["F3", "F2", "F4"]),
+    ],
+)
+def test_explicit_sort_overrides_detection(client, q, sort, expected):
+    body = client.get("/search", params={"q": q, "sort": sort}).json()
+    assert body["sort"] == sort
+    assert [h["id"] for h in body["results"]] == expected
 
 
 def test_search_passes_filters(client, fake):

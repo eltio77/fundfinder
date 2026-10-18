@@ -6,8 +6,8 @@ import { Methodology } from "../components/Methodology";
 import { ResultList } from "../components/ResultList";
 import { SimpleFilters } from "../components/SimpleFilters";
 import { TestSets } from "../components/TestSets";
-import { ErrorNote, Skeleton } from "../components/ui";
-import { api, type Filters, type SearchSettings } from "../lib/api";
+import { ErrorNote, Skeleton, Tabs } from "../components/ui";
+import { api, type Filters, type SearchSettings, type Sort } from "../lib/api";
 import { ms } from "../lib/format";
 import { useExpert, useMeta, useRequest } from "../lib/hooks";
 import { readQuery, writeQuery } from "../lib/params";
@@ -25,17 +25,19 @@ const EXAMPLES = [
 export function SearchPage({ params }: { params: URLSearchParams }) {
   const meta = useMeta();
   const expert = useExpert();
-  const { q, filters, settings } = readQuery(params);
+  const { q, sort, filters, settings } = readQuery(params);
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
 
-  const go = (nextQ: string, f: Filters, s: SearchSettings, replace = false) =>
-    navigate(`/${writeQuery(nextQ.trim(), f, s)}`, { replace });
+  // A new query goes back to "auto" ordering; filter and setting changes keep the user's choice.
+  const go = (nextQ: string, f: Filters, s: SearchSettings, replace = false, o: Sort = "auto") =>
+    navigate(`/${writeQuery(nextQ.trim(), f, s, o)}`, { replace });
 
-  const key = q ? JSON.stringify([q, filters, settings]) : null;
+  const key = q ? JSON.stringify([q, sort, filters, settings]) : null;
   const { data, error, loading, retryIn, reload } = useRequest(key, (signal) =>
-    api.search(q, filters, settings, signal),
+    api.search(q, sort, filters, settings, signal),
   );
+  const byCost = data?.sort === "cost";
   const clusters = useRequest(expert ? "clusters" : null, (signal) => api.clusters(signal));
 
   const submit = (e: FormEvent) => {
@@ -93,7 +95,12 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
                 <span className="muted">“{q}”</span>
               </h2>
               <p className="card-head-sub">
-                Best matches first. Open a fund to see others like it.
+                {byCost
+                  ? sort === "auto"
+                    ? "You asked for low cost, so the closest matches are shown cheapest first."
+                    : "Closest matches, cheapest first."
+                  : "Best matches first."}{" "}
+                Open a fund to see others like it.
                 {expert && data && !loading && (
                   <span className="mono">
                     {" "}
@@ -102,11 +109,22 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
                 )}
               </p>
             </div>
+            {data && (
+              <Tabs<Exclude<Sort, "auto">>
+                value={data.sort}
+                label="Order results by"
+                options={[
+                  { value: "relevance", label: "Best match" },
+                  { value: "cost", label: "Lowest cost" },
+                ]}
+                onChange={(o) => go(q, filters, settings, true, o)}
+              />
+            )}
           </header>
-          <SimpleFilters filters={filters} meta={meta} onChange={(f) => go(q, f, settings, true)} />
+          <SimpleFilters filters={filters} meta={meta} onChange={(f) => go(q, f, settings, true, sort)} />
           {expert && (
             <div className="expert-bar">
-              <SettingsFields settings={settings} meta={meta} onChange={(s) => go(q, filters, s, true)} />
+              <SettingsFields settings={settings} meta={meta} onChange={(s) => go(q, filters, s, true, sort)} />
             </div>
           )}
           <div aria-live="polite">

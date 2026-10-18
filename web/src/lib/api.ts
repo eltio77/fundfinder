@@ -1,4 +1,6 @@
 export type Mode = "text" | "exposure" | "both";
+/** "auto": the server puts the cheapest first when the query asks for low cost. */
+export type Sort = "auto" | "relevance" | "cost";
 
 export interface Hit {
   id: string;
@@ -19,6 +21,7 @@ export interface SearchResponse {
   query: string | null;
   fund_id: string | null;
   mode: Mode | null;
+  sort: Exclude<Sort, "auto">;
   limit: number;
   num_candidates: number | null;
   exact: boolean;
@@ -144,8 +147,18 @@ export const api = {
     get<Record<string, ClusterMember[]>>("/clusters", {}, signal),
   fund: (id: string, signal?: AbortSignal) =>
     get<Fund>(`/funds/${encodeURIComponent(id)}`, {}, signal),
-  search: (q: string, filters: Filters, settings: SearchSettings, signal?: AbortSignal) =>
-    get<SearchResponse>("/search", { q, ...searchParams(filters, settings) }, signal),
+  search: (
+    q: string,
+    sort: Sort,
+    filters: Filters,
+    settings: SearchSettings,
+    signal?: AbortSignal,
+  ) =>
+    get<SearchResponse>(
+      "/search",
+      { q, sort: sort === "auto" ? null : sort, ...searchParams(filters, settings) },
+      signal,
+    ),
   similar: (
     id: string,
     mode: Mode,
