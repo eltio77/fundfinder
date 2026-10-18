@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 
 import { SettingsFields } from "../components/Controls";
+import { HowItWorksGuide } from "../components/HowItWorksGuide";
 import { IconSearch } from "../components/Icons";
 import { Methodology } from "../components/Methodology";
 import { ResultList } from "../components/ResultList";
@@ -28,6 +29,10 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
   const { q, sort, filters, settings } = readQuery(params);
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
+  // The box is autofocused on load, so focus alone doesn't count as interacting.
+  const [touched, setTouched] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const engaged = touched && (focused || draft.trim() !== "");
 
   // A new query goes back to "auto" ordering; filter and setting changes keep the user's choice.
   const go = (nextQ: string, f: Filters, s: SearchSettings, replace = false, o: Sort = "auto") =>
@@ -47,17 +52,19 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
 
   return (
     <div className="stack">
-      <section className={`hero ${q ? "hero-compact" : ""}`}>
+      <section className={`hero ${q ? "hero-compact" : engaged ? "hero-engaged" : ""}`}>
         {!q && (
           <>
             <span className="pill pill-green">Plain-English fund search</span>
             <h1 className="hero-title">
               Find funds by <em>what they do</em>, not what they're called.
             </h1>
-            <p className="hero-sub">
-              Describe what you're looking for in your own words. Fund Finder reads every fund's
-              description and holdings to find the closest matches.
-            </p>
+            <div className="hero-sub-wrap">
+              <p className="hero-sub">
+                Describe what you're looking for in your own words. Fund Finder reads every fund's
+                description and holdings to find the closest matches.
+              </p>
+            </div>
           </>
         )}
         <form className="hero-search" onSubmit={submit} role="search">
@@ -69,7 +76,13 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
             autoComplete="off"
             aria-label="Describe a fund"
             placeholder="e.g. a low-cost fund that invests around the world"
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setTouched(true);
+              setDraft(e.target.value);
+            }}
+            onPointerDown={() => setTouched(true)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
           />
           <button type="submit" className="btn-dark" disabled={!draft.trim()}>
             Search
@@ -149,7 +162,9 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
             ? undefined
             : "Every result is found in up to three ways. Open any fund to see the funds most like it."
         }
-      />
+      >
+        <HowItWorksGuide />
+      </Methodology>
 
       {expert && !q && <TestSets clusters={clusters.data} />}
     </div>

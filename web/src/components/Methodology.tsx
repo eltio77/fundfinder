@@ -34,10 +34,13 @@ export function Methodology({
   title = "How Fund Finder matches funds",
   lead,
   aside,
+  children,
 }: {
   title?: string;
   lead?: ReactNode;
   aside?: ReactNode;
+  /** Extra content under the three methods (the search page's longer guide). */
+  children?: ReactNode;
 }) {
   const expert = useExpert();
   return (
@@ -63,6 +66,7 @@ export function Methodology({
           </div>
         ))}
       </div>
+      {children}
     </section>
   );
 }
