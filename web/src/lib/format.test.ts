@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { toQuery } from "./api";
 import {
+  cheaperMatches,
   clusterLabel,
   clusterSize,
   intensities,
@@ -82,5 +83,19 @@ describe("router", () => {
     const fund = matchRoute("/fund/F0042?mode=text");
     expect(fund).toMatchObject({ name: "fund", id: "F0042" });
     expect(matchRoute("/nope").name).toBe("notFound");
+  });
+});
+
+describe("cheaperMatches", () => {
+  it("keeps only cheaper matches, cheapest first, ties in match order", () => {
+    const hits = [
+      { id: "A", ocf: 0.5 },
+      { id: "B", ocf: 0.1 },
+      { id: "C", ocf: 0.3 },
+      { id: "D", ocf: 0.1 },
+      { id: "E", ocf: 0.4 },
+    ];
+    expect(cheaperMatches(hits, 0.4).map((h) => h.id)).toEqual(["B", "D", "C"]);
+    expect(cheaperMatches(hits, 0.1)).toEqual([]);
   });
 });

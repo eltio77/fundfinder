@@ -13,10 +13,13 @@ import { Link, Num } from "./ui";
 export function ResultList({
   hits,
   fused = false,
+  depth = hits.length,
   clusterId = null,
 }: {
   hits: Hit[];
   fused?: boolean;
+  /** Length of the fused list the ranks come from, if `hits` is a subset of it. */
+  depth?: number;
   clusterId?: string | null;
 }) {
   const expert = useExpert();
@@ -25,7 +28,7 @@ export function ResultList({
   return (
     <ol className="results">
       {hits.map((h, i) => {
-        const reason = fused ? matchReason(h.ranks, hits.length) : null;
+        const reason = fused ? matchReason(h.ranks, depth) : null;
         const s: Strength = reason ? reason.strength : strength(h.score);
         const sibling = expert && clusterId !== null && h.cluster_id === clusterId;
         return (

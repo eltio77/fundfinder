@@ -124,7 +124,7 @@ dark themes).
   **Funds like this**. That list is the fused ranking, and each fund says why it matched:
   "Similar description and holdings" (top 10 of both methods), "Similar description" or "Similar
   holdings". "How we found these" turns the same information into a gauge. "Only cheaper than"
-  limits the list to lower-cost funds and shows them cheapest first.
+  keeps the matched funds that cost less, cheapest first (it doesn't search for cheaper funds).
 - **Expert mode** (switch in the top bar, remembered per browser) adds the technical layer:
   - scores, ranks and exposure fingerprints
   - limit, numCandidates and ANN/exact settings

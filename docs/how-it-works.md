@@ -399,8 +399,9 @@ changes the order:
   overrides the automatic choice. The web app's **Best match / Lowest cost / Highest cost** switch
   does exactly that.
 - `/funds/{id}/similar` takes the same `sort` (default `relevance`; it has no query text to read).
-  On a fund page, turning on **Only cheaper than X%** filters to cheaper funds *and* asks for
-  `sort=cost`, so the matches are shown cheapest first.
+  On a fund page, **Only cheaper than X%** takes the same matched list and keeps the funds that
+  cost less, cheapest first. It filters after matching on purpose: a cost cap in the search
+  itself would fill the list with cheap funds that match poorly.
 
 ## 8. The web app
 

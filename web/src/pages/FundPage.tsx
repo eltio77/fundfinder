@@ -9,9 +9,9 @@ import { Methodology } from "../components/Methodology";
 import { ResultList } from "../components/ResultList";
 import { SimilarColumn } from "../components/SimilarColumn";
 import { ErrorNote, FadeText, Link, Num, Skeleton, Toggle } from "../components/ui";
-import { api, type Filters, type Fund, type Mode, type SearchSettings } from "../lib/api";
-import { clusterLabel, clusterSize, matchReason, siblingStats } from "../lib/format";
-import { useExpert, useMeta, useRequest } from "../lib/hooks";
+import { api, type Fund, type Mode, type SearchResponse, type SearchSettings } from "../lib/api";
+import { cheaperMatches, clusterLabel, clusterSize, matchReason, siblingStats } from "../lib/format";
+import { type RequestState, useExpert, useMeta, useRequest } from "../lib/hooks";
 import { DEFAULT_LIMIT } from "../lib/params";
 import { canGoBackInApp, navigate } from "../lib/router";
 
@@ -67,25 +67,29 @@ function FundView({ fund }: { fund: Fund }) {
   const [compare, setCompare] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
 
-  const filters: Filters = cheaperOnly ? { ocf_max: Math.max(0, fund.ocf - 0.01) } : {};
-  // Asking for cheaper funds means cost matters: show those matches cheapest first.
-  const sort = cheaperOnly ? "cost" : "relevance";
-  const key = JSON.stringify([fund.id, settings, filters, sort]);
+  const key = JSON.stringify([fund.id, settings]);
   // The fused list is the default view: one Voyage call, and its ranks say why each fund matched.
-  const both = useRequest(`both:${key}`, (s) =>
-    api.similar(fund.id, "both", filters, settings, s, sort),
-  );
+  const both = useRequest(`both:${key}`, (s) => api.similar(fund.id, "both", {}, settings, s));
   const showCompare = expert && compare;
   const text = useRequest(showCompare ? `text:${key}` : null, (s) =>
-    api.similar(fund.id, "text", filters, settings, s, sort),
+    api.similar(fund.id, "text", {}, settings, s),
   );
   const exposure = useRequest(showCompare ? `exposure:${key}` : null, (s) =>
-    api.similar(fund.id, "exposure", filters, settings, s, sort),
+    api.similar(fund.id, "exposure", {}, settings, s),
   );
-  const states = { text, exposure, both };
 
-  const hits = both.data?.results ?? [];
-  const inBoth = hits.filter((h) => matchReason(h.ranks, hits.length).both).length;
+  // "Only cheaper": the same matches, keeping those that cost less, cheapest first.
+  // Filtering before the search would fill the list with cheap funds that match poorly.
+  const view = (state: RequestState<SearchResponse>): RequestState<SearchResponse> =>
+    cheaperOnly && state.data
+      ? { ...state, data: { ...state.data, results: cheaperMatches(state.data.results, fund.ocf) } }
+      : state;
+  const states = { text: view(text), exposure: view(exposure), both: view(both) };
+
+  const matched = both.data?.results ?? [];
+  const hits = cheaperOnly ? cheaperMatches(matched, fund.ocf) : matched;
+  // Ranks are within the full list, so "found by both" is judged against its length.
+  const inBoth = hits.filter((h) => matchReason(h.ranks, matched.length).both).length;
   const agreement = hits.length ? inBoth / hits.length : 0;
   const siblings = siblingStats(fund.cluster_id, clusterSize(fund.cluster_id), hits);
   const [objLead, objRest] = firstSentence(fund.objective);
@@ -148,7 +152,7 @@ function FundView({ fund }: { fund: Fund }) {
             <h2>Funds like this</h2>
             <p className="card-head-sub">
               {cheaperOnly
-                ? "Closest matches that cost less than this fund, cheapest first."
+                ? `Of the ${matched.length} closest matches, those that cost less than this fund, cheapest first.`
                 : "Closest matches on description and holdings combined."}
             </p>
           </div>
@@ -166,10 +170,14 @@ function FundView({ fund }: { fund: Fund }) {
         ) : both.loading && !both.data ? (
           <Skeleton rows={6} />
         ) : hits.length === 0 ? (
-          <p className="empty">No similar funds{cheaperOnly ? " are cheaper than this one" : ""}.</p>
+          <p className="empty">
+            {cheaperOnly && matched.length > 0
+              ? `None of the ${matched.length} closest matches is cheaper than this fund.`
+              : "No similar funds."}
+          </p>
         ) : (
           <div className={both.loading ? "is-stale" : ""}>
-            <ResultList hits={hits} fused clusterId={fund.cluster_id} />
+            <ResultList hits={hits} fused depth={matched.length} clusterId={fund.cluster_id} />
           </div>
         )}
       </section>

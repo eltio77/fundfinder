@@ -119,3 +119,8 @@ export function matchReason(
     both: false,
   };
 }
+
+/** Matches that cost less than `ocf`, cheapest first (ties keep match order). */
+export function cheaperMatches<T extends { ocf: number }>(hits: T[], ocf: number): T[] {
+  return hits.filter((h) => h.ocf < ocf).sort((a, b) => a.ocf - b.ocf);
+}
