@@ -63,6 +63,20 @@ def test_first_mention_wins_when_both():
     assert cost_intent("expensive rather than cheap") is Sort.cost_desc
 
 
+@pytest.mark.parametrize(
+    ("q", "order"),
+    [
+        ("not too expensive", Sort.cost),
+        ("not high cost, global equity", Sort.cost),
+        ("isn't expensive", Sort.cost),
+        ("not cheap", None),  # not a request for any order
+        ("not cheap, most expensive first", Sort.cost_desc),
+    ],
+)
+def test_negated_cost_words(q, order):
+    assert cost_intent(q) is order
+
+
 def test_resolve_sort():
     assert resolve_sort(Sort.auto, "lowest cost tracker") is Sort.cost
     assert resolve_sort(Sort.auto, "japan value") is Sort.relevance

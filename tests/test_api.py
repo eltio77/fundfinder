@@ -147,6 +147,40 @@ def test_search_exclusions_drop_mainly_matching_funds(client, fake):
     assert kw["num_candidates"] >= 15
 
 
+def us_tech(fid: str) -> Hit:
+    hit = make_hit(fid)
+    hit.region_weights = {"North America": 0.8}
+    return hit
+
+
+def test_search_exclusions_look_deeper_when_the_page_is_short(client, fake):
+    async def search_text(q, **kw):
+        fake.calls.append(("search", q, kw))
+        hits = [us_tech(f"T{i}") for i in range(kw["limit"])]
+        if kw["limit"] > 15:  # only the deep pass reaches the non-US fund
+            hits[-1] = make_hit("EU1")
+        return hits
+
+    fake.search_text = search_text
+    body = client.get("/search", params={"q": "tech but not US", "limit": 5}).json()
+    assert [c[2]["limit"] for c in fake.calls] == [15, 200]
+    assert [h["id"] for h in body["results"]] == ["EU1"]
+    assert body["interpretation"]["notice"] is None
+
+
+def test_search_explains_when_exclusions_leave_nothing(client, fake):
+    async def search_text(q, **kw):
+        fake.calls.append(("search", q, kw))
+        return [us_tech("T1"), us_tech("T2")]  # fewer than asked: no deeper pass
+
+    fake.search_text = search_text
+    body = client.get("/search", params={"q": "tech but not US"}).json()
+    assert body["results"] == [] and len(fake.calls) == 1
+    notice = body["interpretation"]["notice"]
+    assert "No funds matched all of these" in notice
+    assert "“Not mainly North America”" in notice
+
+
 class FakeLlm:
     model = "claude-test"
 

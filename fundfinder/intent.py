@@ -24,6 +24,13 @@ _HIGH_COST = re.compile(
 )
 
 
+# "not cheap", "not too expensive", "isn't high cost": the cost word is negated.
+_NEGATED = re.compile(
+    r"\b(?:not|never|isn['’]?t|aren['’]?t)\s+(?:too\s+|very\s+|so\s+|that\s+|overly\s+)?$",
+    re.IGNORECASE,
+)
+
+
 class Sort(StrEnum):
     auto = "auto"  # by cost if the query asks for low or high cost, otherwise relevance
     relevance = "relevance"
@@ -33,12 +40,18 @@ class Sort(StrEnum):
 
 def cost_intent(q: str) -> Sort | None:
     """Sort.cost / Sort.cost_desc if q asks for low / high cost. If it asks for both,
-    the first mention wins."""
-    low, high = _LOW_COST.search(q), _HIGH_COST.search(q)
-    if low and (not high or low.start() < high.start()):
-        return Sort.cost
-    if high:
-        return Sort.cost_desc
+    the first mention wins. A negated mention counts as its opposite when that is
+    still a request about cost ("not expensive" = cheapest first), but "not cheap"
+    asks for no particular order."""
+    mentions = sorted(
+        [(m.start(), Sort.cost) for m in _LOW_COST.finditer(q)]
+        + [(m.start(), Sort.cost_desc) for m in _HIGH_COST.finditer(q)]
+    )
+    for start, order in mentions:
+        if not _NEGATED.search(q[:start]):
+            return order
+        if order is Sort.cost_desc:
+            return Sort.cost
     return None
 
 

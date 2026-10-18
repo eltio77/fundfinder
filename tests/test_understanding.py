@@ -22,6 +22,8 @@ def keys(q: str) -> list[str]:
         ("funds under 0.1% in S&P", 0.1, "funds in S&P"),
         ("trackers under 0.1% in the S&P 500", 0.1, "trackers in the S&P 500"),
         ("under 0.2% in a FTSE 100 tracker", 0.2, "a FTSE 100 tracker"),
+        # Below 1%, a sector or region after the cap is what the fund invests in.
+        ("under 0.2% in tech or healthcare", 0.2, "tech or healthcare"),
     ],
 )
 def test_cost_cap(q, ocf_max, text):
@@ -60,6 +62,9 @@ def test_no_cost_cap(q):
         ("actively managed UK smaller companies", False),
         ("stock picking in Japan", False),
         ("not an index fund", False),
+        ("not active", True),
+        ("not actively managed funds", True),
+        ("not index funds, not active", None),  # contradicts itself: apply neither
         ("index-linked gilts", None),  # "index-linked" is a bond type
         ("not index-linked gilts", None),  # ...so negating it says nothing about trackers
         ("bonds but not index linked", None),
@@ -83,6 +88,15 @@ def test_fund_type(q, passive):
         ("a fund with 60% in shares and the rest in bonds", "Mixed Assets"),
         ("money market fund", "Money Market"),
         ("shares and bonds", None),  # two named, not mixed: leave it
+        # One alternative among others isn't "only" that class...
+        ("income from bonds or dividends", None),
+        ("dividends or bonds", None),
+        ("property or infrastructure funds", None),
+        # ...but alternatives within the class, or a class word qualifying both, are.
+        ("bonds or gilts", "Fixed Income"),
+        ("UK gilts or corporate bonds", "Fixed Income"),
+        ("UK or European equity", "Equity"),
+        ("money market or cash funds", "Money Market"),
         ("steady income from big UK companies", None),
     ],
 )
@@ -107,11 +121,30 @@ def test_asset_class(q, asset):
          ["not_asset:Fixed Income", "not_asset:Property"]),
         # A comma without a closing conjunction starts a new clause.
         ("not an index fund, japan", "japan", ["is_passive"]),
+        ("neither tech nor banks, UK", "UK",
+         ["not_sector:Information Technology", "not_sector:Financials"]),
         ("not too risky", "not too risky", []),
         ("gold mining shares not a commodities", "gold mining shares",
          ["asset_class", "not_ia_sector:Commodities and Natural Resources"]),
         ("energy, not natural resources funds", "energy",
          ["not_ia_sector:Commodities and Natural Resources"]),
+        # Other ways of saying "not".
+        ("anything but bonds", NEUTRAL_TEXT, ["not_asset:Fixed Income"]),
+        ("other than tech", NEUTRAL_TEXT, ["not_sector:Information Technology"]),
+        ("apart from the US", NEUTRAL_TEXT, ["not_region:North America"]),
+        ("neither tech nor banks", NEUTRAL_TEXT,
+         ["not_sector:Information Technology", "not_sector:Financials"]),
+        ("global equity, nothing with bonds", "global equity",
+         ["asset_class", "not_asset:Fixed Income"]),
+        ("doesn't invest in tech or energy", NEUTRAL_TEXT,
+         ["not_sector:Information Technology", "not_sector:Energy"]),
+        ("global funds not heavy in US or tech", "global funds",
+         ["not_sector:Information Technology", "not_region:North America"]),
+        ("not active funds", NEUTRAL_TEXT, ["is_passive"]),
+        # Bond sub-types exclude their sector, not every bond fund.
+        ("safe income but not gilts", "safe income", ["not_ia_sector:UK Gilts"]),
+        ("not UK gilts", NEUTRAL_TEXT, ["not_ia_sector:UK Gilts"]),
+        ("not corporate bonds", NEUTRAL_TEXT, ["not_ia_sector:£ Corporate Bond"]),
     ],
 )  # fmt: skip
 def test_negations(q, text, expected):

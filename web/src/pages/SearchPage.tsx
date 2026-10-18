@@ -196,7 +196,10 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
             ) : loading && !data ? (
               <Skeleton rows={6} />
             ) : data && data.results.length === 0 ? (
-              <p className="empty">No funds match these filters. Try removing one.</p>
+              // The interpretation notice already says which rule emptied the page.
+              data.interpretation?.notice ? null : (
+                <p className="empty">No funds match these filters. Try removing one.</p>
+              )
             ) : data ? (
               <div className={loading ? "is-stale" : ""}>
                 <ResultList hits={data.results} />

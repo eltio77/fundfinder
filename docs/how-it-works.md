@@ -215,10 +215,11 @@ deterministic rules:
 | "under 0.2%", "fees below 15bps", "OCF under 0.25", "no more than 0.3% p.a." | `ocf_max` (cost cap, inclusive) | yes |
 | "index fund", "tracker", "passive", "follows the US stock market" | `is_passive=true` | no: the words still help the match |
 | "actively managed", "active", "stock picking", "not an index fund" | `is_passive=false` | only the negation |
+| "not active", "not actively managed" | `is_passive=true` | yes |
 | "bonds", "gilts", "equity", "shares", "property", "multi-asset", "money market" (exactly one named) | `asset_class` | no |
 | "60% in shares" | `asset_class=Mixed Assets` | no |
 | "no bonds or property" | `asset_class` not in (…), as a pre-filter | yes |
-| "not commodities", "no natural resources funds" | `ia_sector` not "Commodities and Natural Resources", as a pre-filter | yes |
+| "not commodities", "no natural resources funds", "not gilts", "not corporate bonds" | `ia_sector` not in (…), as a pre-filter ("not gilts" keeps other bond funds) | yes |
 | "not tech", "without tech or banks", "excluding healthcare" | drop funds with **50% or more** in that sector | yes |
 | "ex UK", "not in the US", "excluding China", "non-UK" | drop funds with **50% or more** in that region | yes |
 
@@ -230,8 +231,10 @@ Design choices:
   broad global funds reach about 40%. Dropping every fund with *any* tech would leave nothing.
 - **Guards against misreading.** A number counts as a cost only with a `%`/bps unit or a cost
   word, at most 3%, and not when followed by "in", "shares", "bonds" and so on. So "under 50% in
-  shares" isn't a cost cap. "Index-linked gilts" isn't read as an index fund. If two asset classes
-  are named ("shares and bonds"), neither is applied. A comma only continues a negated list when a
+  shares" isn't a cost cap. Below 1%, a sector or region after it is what the fund invests in:
+  "under 0.2% in tech or healthcare" is a cap. "Index-linked gilts" isn't read as an index fund.
+  If two asset classes are named ("shares and bonds"), neither is applied, nor is one offered as
+  an alternative to something else ("income from bonds or dividends"). A comma only continues a negated list when a
   conjunction closes it, so in "not an index fund, japan", "japan" stays a search term.
 - **Your own filters win.** A filter set in the UI or as a query parameter overrides what was
   inferred.
@@ -239,13 +242,19 @@ Design choices:
   list of `{key, label}` items. Pass a key in `ignore` to drop that inference
   (`?ignore=is_passive&ignore=not_sector:Information%20Technology`), or use `interpret=false` to
   turn the step off. The web app shows these as **Understood as** chips with a × on each.
+- **Many ways to say "not"**: "not", "no", "excluding", "except", "without", "avoid", "ex",
+  "non-", "neither … nor", "anything but", "other than", "apart from", "nothing with",
+  "doesn't invest in" and "not heavy in". Negated cost words flip: "not expensive" sorts
+  cheapest first, while "not cheap" sets no order.
 - **Constraint-only queries** ("under 0.1%", "excluding tech, banks or energy") embed the neutral
   text "investment fund", because re-embedding the original would undo a negation.
 
 Sector and region exclusions can't be pre-filters, because the indexes filter only on
 `asset_class`, `ia_sector`, `ocf` and `is_passive`. So they're applied after the search, which
-fetches 3 × `limit` to still fill the page. Sector and region weights are fetched for this but left
-out of responses.
+fetches 3 × `limit` to still fill the page. If that leaves the page short, it looks 200 deep once.
+If nothing survives, `interpretation.notice` names the rule that removed the closest matches
+(for example, every tech fund in the data is mainly North America, so "tech but not US" is empty).
+Sector and region weights are fetched for this but left out of responses.
 
 ### Optional: interpret with AI
 

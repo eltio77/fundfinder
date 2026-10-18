@@ -91,8 +91,42 @@ def get_params(
 
 
 # With exclusions ("not tech") results are dropped after the search, so fetch
-# more to still fill the page.
+# more to still fill the page. If that still leaves the page short, look much
+# deeper once: "tech but not US" must get past every US-heavy tech fund.
 EXCLUSION_OVERFETCH = 3
+EXCLUSION_DEEP_FETCH = 200
+
+
+def _exclusion_rules(
+    exclusions: Exclusions, applied: list[Understood]
+) -> list[tuple[str, Exclusions]]:
+    """Each applied post-filter on its own, with its chip label."""
+    rules = []
+    for item in applied:
+        kind, _, value = item.key.partition(":")
+        if kind == "not_sector":
+            rules.append((item.label, Exclusions(sectors=[value])))
+        elif kind == "not_region":
+            rules.append((item.label, Exclusions(regions=[value])))
+        elif kind == "tracks":
+            rules.append((item.label, Exclusions(tracked_indexes=exclusions.tracked_indexes)))
+    return list({label: r for label, r in rules}.items())
+
+
+def _empty_notice(hits: list[Hit], exclusions: Exclusions, applied: list[Understood]) -> str:
+    """Why exclusions left nothing: name the rule that removed the most matches."""
+
+    def removed(rule: Exclusions) -> int:
+        return sum(rule.excludes(h.sector_weights, h.region_weights, h.tracked_index) for h in hits)
+
+    rules = _exclusion_rules(exclusions, applied)
+    if not hits or not rules:
+        return "No funds matched all of these. Try removing one."
+    label, _ = max(rules, key=lambda r: removed(r[1]))
+    return (
+        f"No funds matched all of these. The closest matches are excluded by “{label}”: "
+        "remove it to see them."
+    )
 
 
 def order_by(hits: list[Hit], order: Sort) -> None:
@@ -215,22 +249,34 @@ async def search(
     else:
         p = Plan(text=q, filters=filters, exclusions=Exclusions(), applied=[])
     text, effective, exclusions, applied = p.text, p.filters, p.exclusions, p.applied
-    fetch = params.limit * EXCLUSION_OVERFETCH if exclusions else params.limit
-    hits = await search.search_text(
-        text,
-        limit=fetch,
-        num_candidates=None
-        if params.num_candidates is None and not exclusions
-        else max(params.num_candidates or default_num_candidates(params.limit), fetch),
-        filters=effective,
-        exact=params.exact,
-    )
-    if exclusions:
-        hits = [
+
+    async def fetch_hits(fetch: int) -> list[Hit]:
+        return await search.search_text(
+            text,
+            limit=fetch,
+            num_candidates=None
+            if params.num_candidates is None and not exclusions
+            else max(params.num_candidates or default_num_candidates(params.limit), fetch),
+            filters=effective,
+            exact=params.exact,
+        )
+
+    def kept(found: list[Hit]) -> list[Hit]:
+        return [
             h
-            for h in hits
+            for h in found
             if not exclusions.excludes(h.sector_weights, h.region_weights, h.tracked_index)
         ]
+
+    fetch = params.limit * EXCLUSION_OVERFETCH if exclusions else params.limit
+    found = await fetch_hits(fetch)
+    hits = kept(found) if exclusions else found
+    # Short page, and the search had more to give: look deeper once.
+    if exclusions and len(hits) < params.limit and len(found) == fetch < EXCLUSION_DEEP_FETCH:
+        found = await fetch_hits(EXCLUSION_DEEP_FETCH)
+        hits = kept(found)
+    if exclusions and not hits:
+        notice = " ".join(filter(None, [notice, _empty_notice(found, exclusions, applied)]))
     hits = hits[: params.limit]
     order = llm_sort if sort is Sort.auto and llm_sort else resolve_sort(sort, q)
     order_by(hits, order)

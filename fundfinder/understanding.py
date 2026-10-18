@@ -79,6 +79,9 @@ ASSET_CLASSES: dict[str, str] = {
 # sector itself; "not tech" stays a GICS exposure exclusion.
 IA_SECTORS: dict[str, str] = {
     r"commodit(?:y|ies)|natural resources": "Commodities and Natural Resources",
+    # "not gilts" rules out gilt funds, not every bond fund.
+    r"(?:uk\s+)?gilts?|government bonds?": "UK Gilts",
+    r"corporate bonds?": "£ Corporate Bond",
 }
 
 ASSET_LABEL = {
@@ -124,23 +127,36 @@ def _alternation(patterns: dict) -> str:
     return "|".join(f"(?:{p})" for p in patterns)
 
 
+# IA sectors first, so "not UK gilts" is the gilts sector rather than "not UK".
+# "not index-linked" isn't about trackers.
 _TERM = (
-    rf"(?:{_alternation(SECTORS)}|{_alternation(REGIONS)}|{_alternation(ASSET_CLASSES)}"
-    rf"|{_alternation(IA_SECTORS)}"
-    r"|index(?![\s-]linked)|trackers?|passive)"  # "not index-linked" isn't about trackers
+    rf"(?:{_alternation(IA_SECTORS)}|{_alternation(SECTORS)}|{_alternation(REGIONS)}"
+    rf"|{_alternation(ASSET_CLASSES)}"
+    r"|index(?![\s-]linked)|trackers?|passive|active(?:ly[\s-]managed)?)"
 )
 _SUFFIX = r"(?:\s+(?:funds?|stocks?|shares|companies|sectors?|exposure|names|heavy|focused))?"
 # Words right after a number that make it an allocation, not a cost: "50% in shares",
-# "20% of the fund", "10% in tech", "30% in the US". "0.1% in S&P" is still a cost:
-# an index name isn't something you hold a share *in* this sense.
+# "20% of the fund". "0.1% in S&P" is still a cost: an index name isn't something you
+# hold a share *in* this sense.
 _ALLOCATION_AFTER = re.compile(
-    rf"^\s*(?:(?:in|of)\s+(?:the\s+)?(?:{_TERM}|fund|portfolio|assets?|cash)\b"
-    r"|shares|equit|bonds?|exposure|allocation)",
+    rf"^\s*(?:(?:in|of)\s+(?:the\s+)?(?:{_alternation(ASSET_CLASSES)}|fund|portfolio|assets?"
+    r"|cash)\b|shares|equit|bonds?|exposure|allocation)",
     re.IGNORECASE,
 )
+# "1% in tech", "2% in the US" are allocations too, but below 1% a sector or region
+# is what the fund invests in: "under 0.2% in tech or healthcare" is a cost cap.
+_PLACE_AFTER = re.compile(
+    rf"^\s*(?:in|of)\s+(?:the\s+)?(?:{_alternation(SECTORS)}|{_alternation(REGIONS)})\b",
+    re.IGNORECASE,
+)
+MIN_PLACE_ALLOCATION = 1.0
+_APOS = r"['’]"
 NEGATION = re.compile(
-    rf"(?:\b(?:but|and)\s+)?\b(?:not|no|excluding|exclude|except|without|avoid(?:ing)?|outside"
-    rf"|ex|non)(?:\s+(?:the|any|an?|in)){{0,2}}[\s-]+(?P<terms>{_TERM}{_SUFFIX}"
+    rf"(?:\b(?:but|and)\s+)?\b(?:not|no|excluding|exclude|except(?:\s+for)?|without"
+    rf"|avoid(?:ing)?|outside|ex|non|neither|(?:anything|everything)\s+but|other\s+than"
+    rf"|(?:apart|aside)\s+from|nothing\s+(?:with|in)|not\s+(?:heavy|overweight|concentrated)\s+in"
+    rf"|(?:does|do)(?:n{_APOS}?t|\s+not)\s+(?:invest|hold)(?:\s+in)?)"
+    rf"(?:\s+(?:the|any|an?|in)){{0,2}}[\s-]+(?P<terms>{_TERM}{_SUFFIX}"
     rf"(?:\s*(?:,|or|and|nor|/)\s*(?:{_TERM}){_SUFFIX})*)\b",
     re.IGNORECASE,
 )
@@ -217,6 +233,33 @@ def _split_terms(terms: str) -> list[str]:
     return out
 
 
+def _or_with_other(text: str, named: set[str]) -> set[str]:
+    """Asset classes offered as one alternative to something outside that class:
+    "income from bonds or dividends" isn't "bonds only". "bonds or gilts" and
+    "UK or European equity" (the class word qualifies both) still are."""
+    out = set()
+    for m in re.finditer(r"((?:[\w-]+\s+)?[\w-]+)\s+or\s+([\w-]+(?:\s+[\w-]+)?)", text, re.I):
+        left, right = m.group(1), m.group(2)
+        for asset in named:
+            patterns = _class_patterns(asset)
+            ends_left = any(re.search(rf"\b(?:{p})$", left, re.I) for p in patterns)
+            starts_right = any(re.match(rf"(?:{p})\b", right, re.I) for p in patterns)
+            if ends_left != starts_right:
+                out.add(asset)
+    return out
+
+
+def _class_patterns(asset: str) -> list[str]:
+    """Words for an asset class, including IA sectors that are kinds of it ("gilts")."""
+    return [p for p, a in ASSET_CLASSES.items() if a == asset] + [
+        p for p, s in IA_SECTORS.items() if s in _IA_SECTOR_CLASS.get(asset, ())
+    ]
+
+
+# IA sectors whose names are also kinds of an asset class ("gilts" are bonds).
+_IA_SECTOR_CLASS = {"Fixed Income": ("UK Gilts", "£ Corporate Bond")}
+
+
 def _fmt_pct(v: float) -> str:
     return f"{v:.2f}%"
 
@@ -246,7 +289,7 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
     applied: list[Understood] = []
     excluded_assets: list[str] = []
     excluded_ia_sectors: list[str] = []
-    negated_passive: bool | None = None
+    negated_type: set[bool] = set()  # is_passive values implied by "not active" etc.
 
     # 1. Negations first, so "not an index fund" isn't read as "index fund".
     for m in list(NEGATION.finditer(q)):
@@ -254,18 +297,22 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
         terms, phrase = m.group("terms"), m.group(0)
         # A comma only continues the list when a conjunction closes it ("tech, banks
         # or energy"); otherwise it starts a new clause ("not an index fund, japan").
-        if "," in terms and not re.search(r"\b(?:or|and|nor)\b", terms, re.I):
-            terms = terms.split(",")[0]
+        # "neither tech nor banks, UK": the conjunction must come after the comma.
+        while "," in terms and not re.search(r"\b(?:or|and|nor)\b", terms.rsplit(",", 1)[1], re.I):
+            terms = terms.rsplit(",", 1)[0]
             phrase = phrase[: m.start("terms") - m.start() + len(terms)]
         for term in _split_terms(terms):
             if re.fullmatch(r"index|trackers?|passive", term, re.I):
-                negated_passive = False
+                negated_type.add(False)
                 took = True
-            elif (asset := _lookup(term, ASSET_CLASSES)) and not _lookup(term, SECTORS):
-                excluded_assets.append(asset)
+            elif re.fullmatch(r"active(?:ly[\s-]managed)?", term, re.I):
+                negated_type.add(True)
                 took = True
             elif ia_sector := _lookup(term, IA_SECTORS):
                 excluded_ia_sectors.append(ia_sector)
+                took = True
+            elif (asset := _lookup(term, ASSET_CLASSES)) and not _lookup(term, SECTORS):
+                excluded_assets.append(asset)
                 took = True
             elif sector := _lookup(term, SECTORS):
                 exclusions.sectors.append(sector)
@@ -284,7 +331,10 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
             value /= 100
         elif not unit and not m.group("pre"):
             continue  # a bare number with no % and no cost word: not a cost
-        if _ALLOCATION_AFTER.match(text[m.end() :]):
+        after = text[m.end() :]
+        if _ALLOCATION_AFTER.match(after) or (
+            value >= MIN_PLACE_ALLOCATION and _PLACE_AFTER.match(after)
+        ):
             continue
         if not 0 < value <= MAX_OCF or (value > MAX_PLAUSIBLE_OCF and not m.group("pre")):
             continue
@@ -293,9 +343,9 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
         text = text.replace(m.group(0), " ")
         break
 
-    # 3. Fund type.
-    if negated_passive is not None:
-        filters.is_passive = negated_passive
+    # 3. Fund type. "Not index funds, not active" contradicts itself: apply neither.
+    if negated_type:
+        filters.is_passive = negated_type.pop() if len(negated_type) == 1 else None
     else:
         passive, active = PASSIVE.search(text), ACTIVE.search(text)
         if passive and not active:
@@ -316,6 +366,7 @@ def interpret(q: str) -> tuple[str, Filters, Exclusions, list[Understood]]:
     if "Property" in named and _found(r"property shares|real estate shares|reits?", text):
         named.discard("Equity")
     named -= set(excluded_assets)
+    named -= _or_with_other(text, named)
     if len(named) == 1:
         asset = named.pop()
         filters.asset_class = asset
