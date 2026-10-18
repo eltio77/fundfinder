@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,11 +13,9 @@ class Settings(BaseSettings):
     mongodb_db: str = "fund_finder"
     mongodb_timeout_ms: int = 5000
 
-    # "auto": Atlas Automated Embedding (autoEmbed index, key registered in Atlas).
-    # "client": fallback where the app calls Voyage itself and stores vectors.
-    embedding_mode: Literal["auto", "client"] = "auto"
+    # Voyage model for the autoEmbed index and query-time embedding. Embedding runs
+    # inside mongot (Atlas or local), so the app itself never holds a Voyage key.
     embed_model: str = "voyage-4"
-    voyage_api_key: SecretStr | None = None
 
 
 @lru_cache

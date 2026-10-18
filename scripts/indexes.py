@@ -13,7 +13,7 @@ from fundfinder.db import FUNDS, make_client
 from fundfinder.indexes import ensure_indexes, index_definitions, wait_until_ready
 
 
-async def run(wait: bool) -> None:
+async def run(wait: bool, timeout_s: float) -> int:
     settings = get_settings()
     client = make_client(settings)
     try:
@@ -23,8 +23,19 @@ async def run(wait: bool) -> None:
             print(f"{name}: {action}")
         if wait:
             print("waiting for indexes to be READY ...")
-            await wait_until_ready(coll, list(index_definitions(settings.embed_model)))
+            try:
+                await wait_until_ready(
+                    coll, list(index_definitions(settings.embed_model)), timeout_s=timeout_s
+                )
+            except TimeoutError:
+                # Usually Voyage throttling (free keys: 3 RPM / 10K TPM); the build continues.
+                print(
+                    f"not READY after {timeout_s:.0f}s; the build keeps going in the background. "
+                    "Re-run with a longer --timeout, or check again later."
+                )
+                return 1
             print("all indexes READY")
+        return 0
     finally:
         await client.close()
 
@@ -32,8 +43,11 @@ async def run(wait: bool) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-wait", action="store_true")
-    asyncio.run(run(wait=not parser.parse_args().no_wait))
-    return 0
+    parser.add_argument(
+        "--timeout", type=float, default=1800, help="seconds to wait (default 1800)"
+    )
+    args = parser.parse_args()
+    return asyncio.run(run(wait=not args.no_wait, timeout_s=args.timeout))
 
 
 if __name__ == "__main__":

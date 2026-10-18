@@ -1,4 +1,25 @@
+# Local stack: Atlas Local (mongod + mongot with Automated Embedding) + the app.
+#   docker compose up -d --build
+#   docker compose run --rm app python -m scripts.seed
+#   docker compose run --rm app python -m scripts.indexes
 services:
+  mongo:
+    # :preview bundles the Community mongot build, needed for autoEmbed indexes.
+    # Pinned by digest for reproducibility; bump deliberately.
+    image: mongodb/mongodb-atlas-local:preview@sha256:ff75fd47e918952cc91094e888e8aeb7529aeb70f987b075aeef3944c9bd8014
+    hostname: mongo
+    environment:
+      # Embeds documents and query text. Atlas-issued keys use the default endpoint;
+      # keys created directly at voyageai.com need https://api.voyageai.com/v1/embeddings.
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY:?set VOYAGE_API_KEY in .env}
+      VOYAGE_EMBEDDING_PROVIDER_ENDPOINT: ${VOYAGE_EMBEDDING_PROVIDER_ENDPOINT:-https://ai.mongodb.com/v1/embeddings}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    # Health check is built into the image.
+
   app:
     build:
       context: .
@@ -6,5 +27,13 @@ services:
     env_file: .env
     environment:
       PORT: "8000"
+      MONGODB_URI: mongodb://mongo:27017/?directConnection=true
     ports:
       - "8000:8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  mongo-config:
