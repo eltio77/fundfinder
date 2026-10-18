@@ -24,6 +24,7 @@ const EXAMPLES = [
   { q: "artificial intelligence and chips", tone: "amber" },
   { q: "low cost invests in Apple", tone: "coral" },
   { q: "highest exposure to NVIDIA", tone: "lilac" },
+  { q: "global shares but not tech", tone: "forest" },
 ];
 
 // Subtitle for the results order: "auto" when the server inferred it from the query.
