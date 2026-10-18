@@ -182,9 +182,12 @@ Vercel builds `Dockerfile.vercel` (Container Runtime, beta, available on Hobby) 
 | Variable | Required | Value |
 |---|---|---|
 | `MONGODB_URI` | yes | Atlas SRV string for a **read-only** database user (role `read` on `fund_finder`) |
-| `PORT` | yes | `8000`. Vercel routes to port 80 unless `PORT` is set, and the container runs as a non-root user |
+| `PORT` | no | leave unset. The image listens on 80, Vercel's default; if you do set it, the container listens there |
 | `MONGODB_DB` | no | defaults to `fund_finder` |
 | `EMBED_MODEL` | no | defaults to `voyage-4`; must match the model in the `profile_auto` index |
+
+If `MONGODB_URI` is missing the app still starts, and `/health` returns 503 with
+`database not configured: set MONGODB_URI`.
 
 You don't need `VOYAGE_API_KEY` on Vercel: Atlas embeds query text using the key registered in
 Atlas.

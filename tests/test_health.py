@@ -38,3 +38,14 @@ def test_health_mongo_down_returns_503():
         r = c.get("/health")
     assert r.status_code == 503
     assert r.json()["mongo"] == "unreachable"
+
+
+def test_boots_without_mongodb_uri_and_reports_why(monkeypatch):
+    from fundfinder.config import Settings
+
+    monkeypatch.setattr("fundfinder.main.get_settings", lambda: Settings(mongodb_uri=None))
+    with TestClient(create_app(web_dist=None)) as c:
+        r = c.get("/health")
+        assert r.status_code == 503
+        assert "MONGODB_URI" in r.json()["detail"]
+        assert c.get("/search", params={"q": "uk equity"}).status_code == 503

@@ -4,7 +4,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from fundfinder.db import FUNDS
+from fundfinder.db import FUNDS, get_db
 from fundfinder.search import (
     CANDIDATES_PER_RESULT,
     MAX_LIMIT,
@@ -22,7 +22,7 @@ router = APIRouter()
 
 def get_search(request: Request) -> FundSearch:
     settings = request.app.state.settings
-    coll = request.app.state.mongo[settings.mongodb_db][FUNDS]
+    coll = get_db(request)[FUNDS]
     return FundSearch(coll, settings.embed_model)
 
 

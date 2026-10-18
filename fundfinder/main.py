@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pymongo.errors import OperationFailure, PyMongoError
 
 from fundfinder.config import get_settings
-from fundfinder.db import make_client
+from fundfinder.db import NOT_CONFIGURED, make_client
 from fundfinder.routes import api, health
 from fundfinder.routes.web import WEB_DIST, mount_web
 
@@ -19,11 +19,14 @@ log = logging.getLogger("fundfinder")
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     app.state.settings = settings
-    app.state.mongo = make_client(settings)
+    app.state.mongo = make_client(settings) if settings.mongodb_uri else None
+    if app.state.mongo is None:
+        log.error(NOT_CONFIGURED)
     try:
         yield
     finally:
-        await app.state.mongo.close()
+        if app.state.mongo is not None:
+            await app.state.mongo.close()
 
 
 def create_app(web_dist: Path | None = WEB_DIST) -> FastAPI:

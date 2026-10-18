@@ -9,7 +9,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    mongodb_uri: SecretStr
+    # Optional so the app still boots (and /health says why) when it's missing.
+    mongodb_uri: SecretStr | None = None
     mongodb_db: str = "fund_finder"
     mongodb_timeout_ms: int = 5000
 
