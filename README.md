@@ -156,6 +156,13 @@ by descending OCF. Only the top `limit`
 matches are re-ordered: they're still the most relevant funds, shown cheapest first. "Low risk",
 "high yield" and similar don't trigger it. The response's `sort` says which order was used.
 
+Before searching, `/search` also reads constraints from `q`: cost caps ("under 0.2%"), fund type
+("index funds", "actively managed"), a single asset class ("bonds") and negations ("not tech",
+"ex UK", "no bonds"). These become filters or exclusions, and negations are removed from the text
+that gets embedded. The response's `interpretation` lists what was applied; pass keys in `ignore`
+to drop them, or `interpret=false` to turn this off. See
+[docs/how-it-works.md](docs/how-it-works.md#step-1-query-understanding).
+
 The fund itself is excluded by requesting `limit + 1` and dropping it. Scores are Atlas
 `vectorSearchScore`, so cosine is reported as `(1 + cos) / 2`; in `both` mode the score is the RRF
 score.

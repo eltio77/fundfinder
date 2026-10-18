@@ -2,7 +2,7 @@ import time
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from fundfinder.db import FUNDS, get_db
 from fundfinder.intent import Sort, resolve_sort
@@ -17,6 +17,7 @@ from fundfinder.search import (
     default_num_candidates,
 )
 from fundfinder.taxonomy import ASSET_CLASS_BREAKDOWN, GICS_SECTORS, REGIONS
+from fundfinder.understanding import Understood, plan
 
 router = APIRouter()
 
@@ -61,12 +62,25 @@ def get_params(
     return SearchParams(limit=limit, num_candidates=num_candidates, exact=exact)
 
 
+# With exclusions ("not tech") results are dropped after the search, so fetch
+# more to still fill the page.
+EXCLUSION_OVERFETCH = 3
+
+
+class Interpretation(BaseModel):
+    text: str = Field(description="What was embedded, after removing constraints")
+    applied: list[Understood] = Field(
+        description="Constraints read from the query; pass a key in `ignore` to drop it"
+    )
+
+
 class SearchResponse(BaseModel):
     query: str | None = None
     fund_id: str | None = None
     mode: Mode | None = None
     # Order of `results`: "cost" = ascending OCF, "cost_desc" = descending, else similarity.
     sort: Sort = Sort.relevance
+    interpretation: Interpretation | None = None
     limit: int
     num_candidates: int | None
     exact: bool
@@ -82,7 +96,7 @@ def _response(params: SearchParams, filters: Filters, started: float, **kw) -> S
         if params.exact
         else params.num_candidates or default_num_candidates(params.limit),
         exact=params.exact,
-        filters=filters.model_dump(exclude_none=True),
+        filters=filters.model_dump(exclude_none=True, exclude={"asset_class_nin"}),
         took_ms=round((time.perf_counter() - started) * 1000, 1),
         **kw,
     )
@@ -109,21 +123,49 @@ async def search(
             "or high cost (most expensive first), otherwise by match"
         ),
     ] = Sort.auto,
+    interpret: Annotated[
+        bool,
+        Query(description="Read cost caps, fund type, asset class and negations from q"),
+    ] = True,
+    ignore: Annotated[
+        list[str],
+        Query(description="Keys from `interpretation.applied` to drop, e.g. is_passive"),
+    ] = [],  # noqa: B006 - FastAPI copies defaults per request
 ) -> SearchResponse:
-    """Semantic search: Atlas embeds `q` with Voyage and searches the `profile_auto` index."""
+    """Semantic search. Constraints in `q` ("under 0.2%", "index funds", "not tech")
+    become filters; Atlas embeds the rest with Voyage and searches `profile_auto`."""
     started = time.perf_counter()
+    if interpret:
+        p = plan(q, filters, set(ignore))
+        text, effective, exclusions, applied = p.text, p.filters, p.exclusions, p.applied
+    else:
+        text, effective, exclusions, applied = q, filters, None, []
+    fetch = params.limit * EXCLUSION_OVERFETCH if exclusions else params.limit
     hits = await search.search_text(
-        q,
-        limit=params.limit,
-        num_candidates=params.num_candidates,
-        filters=filters,
+        text,
+        limit=fetch,
+        num_candidates=None
+        if params.num_candidates is None and not exclusions
+        else max(params.num_candidates or default_num_candidates(params.limit), fetch),
+        filters=effective,
         exact=params.exact,
     )
+    if exclusions:
+        hits = [h for h in hits if not exclusions.excludes(h.sector_weights, h.region_weights)]
+    hits = hits[: params.limit]
     order = resolve_sort(sort, q)
     if order in (Sort.cost, Sort.cost_desc):
         # Re-orders the best matches only; stable, so equal costs keep match order.
         hits.sort(key=lambda h: h.ocf, reverse=order is Sort.cost_desc)
-    return _response(params, filters, started, query=q, sort=order, results=hits)
+    return _response(
+        params,
+        effective,
+        started,
+        query=q,
+        sort=order,
+        interpretation=Interpretation(text=text, applied=applied),
+        results=hits,
+    )
 
 
 @router.get("/funds/{fund_id}/similar", response_model=SearchResponse, tags=["search"])

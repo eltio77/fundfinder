@@ -193,14 +193,60 @@ sequenceDiagram
     participant A as FastAPI
     participant M as Atlas (mongot)
     participant V as Voyage AI
-    U->>A: GET /search?q=lowest cost global tracker
-    A->>M: $vectorSearch on profile_auto { query, model, numCandidates, limit, filter }
+    U->>A: GET /search?q=global equity index funds under 0.2%, not tech
+    A->>A: read constraints: is_passive, ocf_max, asset_class, exclusions
+    A->>M: $vectorSearch on profile_auto { query: "global equity index funds", filter, ... }
     M->>V: embed query text
     V-->>M: 1024-dim vector
     M-->>A: top `limit` funds + vectorSearchScore
     A->>A: work out the order (relevance / cost / cost_desc)
     A-->>U: { sort, took_ms, results: [...] }
 ```
+
+### Step 1: query understanding
+
+Embeddings capture what a query is *about*, but not limits, hard requirements or negation. "Not
+tech" even pulls tech funds *closer*, because "tech" is in the text. So before searching,
+`fundfinder/understanding.py` turns the constraint-like parts of the query into filters, using
+deterministic rules:
+
+| The query says | Becomes | Removed from the embedded text? |
+|---|---|---|
+| "under 0.2%", "fees below 15bps", "OCF under 0.25", "no more than 0.3% p.a." | `ocf_max` (cost cap, inclusive) | yes |
+| "index fund", "tracker", "passive", "follows the US stock market" | `is_passive=true` | no: the words still help the match |
+| "actively managed", "active", "stock picking", "not an index fund" | `is_passive=false` | only the negation |
+| "bonds", "gilts", "equity", "shares", "property", "multi-asset", "money market" (exactly one named) | `asset_class` | no |
+| "60% in shares" | `asset_class=Mixed Assets` | no |
+| "no bonds or property" | `asset_class` not in (…), as a pre-filter | yes |
+| "not tech", "without tech or banks", "excluding healthcare" | drop funds with **50% or more** in that sector | yes |
+| "ex UK", "not in the US", "excluding China", "non-UK" | drop funds with **50% or more** in that region | yes |
+
+Design choices:
+
+- **Places and themes stay soft.** "Japan" or "healthcare" are left to the embedding, which
+  handles them well. A hard filter would throw away near misses.
+- **"Not tech" means "not mainly tech".** In the data, tech funds hold 60–81% technology, while
+  broad global funds reach about 40%. Dropping every fund with *any* tech would leave nothing.
+- **Guards against misreading.** A number counts as a cost only with a `%`/bps unit or a cost
+  word, at most 3%, and not when followed by "in", "shares", "bonds" and so on. So "under 50% in
+  shares" isn't a cost cap. "Index-linked gilts" isn't read as an index fund. If two asset classes
+  are named ("shares and bonds"), neither is applied. A comma only continues a negated list when a
+  conjunction closes it, so in "not an index fund, japan", "japan" stays a search term.
+- **Your own filters win.** A filter set in the UI or as a query parameter overrides what was
+  inferred.
+- **Everything is reported back** in `interpretation`: the text that was embedded, and an `applied`
+  list of `{key, label}` items. Pass a key in `ignore` to drop that inference
+  (`?ignore=is_passive&ignore=not_sector:Information%20Technology`), or use `interpret=false` to
+  turn the step off. The web app shows these as **Understood as** chips with a × on each.
+- **Constraint-only queries** ("under 0.1%", "excluding tech, banks or energy") embed the neutral
+  text "investment fund", because re-embedding the original would undo a negation.
+
+Sector and region exclusions can't be pre-filters, because the indexes filter only on
+`asset_class`, `ia_sector`, `ocf` and `is_passive`. So they're applied after the search, which
+fetches 3 × `limit` to still fill the page. Sector and region weights are fetched for this but left
+out of responses.
+
+### Step 2: vector search
 
 The pipeline (`vector_search_pipeline()` in `fundfinder/search.py`) is two stages:
 
@@ -223,6 +269,7 @@ The pipeline (`vector_search_pipeline()` in `fundfinder/search.py`) is two stage
 | `exact` | false | Exhaustive (ENN) search instead of ANN. Used to check ANN accuracy. |
 | `asset_class`, `ia_sector`, `ocf_max`, `is_passive` | none | Pre-filters |
 | `sort` (`/search` only) | `auto` | See [section 7](#7-ordering-by-cost) |
+| `interpret`, `ignore` (`/search` only) | `true`, none | Query understanding on or off, and inferences to drop (see above) |
 
 **Scores.** Atlas returns `vectorSearchScore` in 0–1, which is `(1 + cosine) / 2`. So **0.5
 means unrelated** and 1 means identical. The UI turns scores into labels: "Strong match" at
@@ -269,7 +316,9 @@ embedded once for the text half.
 ## 7. Ordering by cost
 
 Similarity can't rank by price: "lowest cost" is an instruction about order, not a description of
-a fund. So `/search` reads the query for cost wording (`fundfinder/intent.py`):
+a fund. So, alongside query understanding, `/search` reads the query for cost wording
+(`fundfinder/intent.py`). A cost *cap* ("under 0.2%") is a filter (section 5); cost *wording*
+changes the order:
 
 | Query says | Order | Example triggers |
 |---|---|---|
@@ -403,8 +452,10 @@ typecheck, Vitest and a production build for the web app.
   is the obvious next change.
 - **Weak exposure signal for bonds.** Adding bond-specific dimensions (duration, credit quality,
   government vs corporate split) would help.
-- **Cost sorting is rule-based.** It handles common wording, not every phrasing. A wider intent
-  layer could also handle "index funds only" or "under 0.2%" as filters.
+- **Query understanding is rule-based.** It handles common wording, not every phrasing, and it
+  has no region or IA-sector filters because the indexes don't filter on region. An LLM-based
+  parser could replace `interpret()` and return the same structure; adding a `main_region` filter
+  field to the indexes would allow hard region filters.
 - **No performance or risk data.** Results say nothing about past returns, volatility or ratings.
 - **Scale.** At 300 funds ANN is effectively exact. With thousands of funds, tune `numCandidates`
   using the overlap report, and move off the Free tier's throughput limits.

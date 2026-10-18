@@ -72,6 +72,7 @@ describe("api", () => {
   it("drops empty params from the query string", () => {
     expect(toQuery({ q: "gilts", limit: 5, exact: null, ia_sector: "" })).toBe("?q=gilts&limit=5");
     expect(toQuery({})).toBe("");
+    expect(toQuery({ q: "x", ignore: ["a", "b"] })).toBe("?q=x&ignore=a&ignore=b");
   });
 });
 

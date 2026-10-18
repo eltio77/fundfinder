@@ -7,7 +7,7 @@ const STEPS = [
   },
   {
     title: "AI reads your words",
-    body: "Your description becomes a “meaning fingerprint”: a list of numbers that captures what you meant, not just the words you used.",
+    body: "Limits like “under 0.2%”, “index funds” or “not tech” become filters, shown as “Understood as”. The rest becomes a “meaning fingerprint”: a list of numbers that captures what you meant, not just the words you used.",
     expert: "Atlas embeds q with voyage-4 at query time",
   },
   {
@@ -44,7 +44,7 @@ const TIPS = [
   ["Name what it should hold", "“UK government bonds” works better than “a safe fund”."],
   ["Add a place or theme", "Japan, healthcare, emerging markets, technology."],
   ["Say if cost matters", "“Low cost” puts the cheapest matches first, “highest cost” the most expensive."],
-  ["Narrow it down", "Use the filters under the search for fund type and cost."],
+  ["Set limits in words", "“Index funds under 0.2%” or “global equity, not tech” become filters. Remove any you don't want."],
   ["Explore from a fund", "Open any result to see the funds most like it."],
 ];
 

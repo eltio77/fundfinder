@@ -99,6 +99,54 @@ def test_search_passes_filters(client, fake):
     assert filters.asset_class == "Equity" and filters.ocf_max == 0.3 and filters.is_passive
 
 
+def test_search_interprets_constraints(client, fake):
+    body = client.get("/search", params={"q": "index funds under 0.2% a year, no bonds"}).json()
+    _, text, kw = fake.calls[0]
+    assert text == "index funds"  # what gets embedded
+    f = kw["filters"]
+    assert f.is_passive is True and f.ocf_max == 0.2 and f.asset_class_nin == ["Fixed Income"]
+    assert body["interpretation"]["text"] == "index funds"
+    assert [a["key"] for a in body["interpretation"]["applied"]] == [
+        "ocf_max",
+        "is_passive",
+        "not_asset:Fixed Income",
+    ]
+    assert body["filters"] == {"ocf_max": 0.2, "is_passive": True}
+
+
+def test_search_ignore_and_interpret_off(client, fake):
+    client.get("/search", params={"q": "index funds under 0.2%", "ignore": ["is_passive"]})
+    assert fake.calls[-1][2]["filters"].is_passive is None
+    assert fake.calls[-1][2]["filters"].ocf_max == 0.2
+
+    body = client.get(
+        "/search", params={"q": "index funds under 0.2%", "interpret": "false"}
+    ).json()
+    assert fake.calls[-1][1] == "index funds under 0.2%"
+    assert fake.calls[-1][2]["filters"].ocf_max is None
+    assert body["interpretation"]["applied"] == []
+
+
+def test_search_exclusions_drop_mainly_matching_funds(client, fake):
+    tech = make_hit("T1", 0.95)
+    tech.sector_weights = {"Information Technology": 0.7}
+    broad = make_hit("G1", 0.9)
+    broad.sector_weights = {"Information Technology": 0.25}
+
+    async def search_text(q, **kw):
+        fake.calls.append(("search", q, kw))
+        return [tech, broad]
+
+    fake.search_text = search_text
+    body = client.get("/search", params={"q": "global equity but not tech", "limit": 5}).json()
+    assert [h["id"] for h in body["results"]] == ["G1"]
+    assert "sector_weights" not in body["results"][0]  # internal only
+    _, text, kw = fake.calls[0]
+    assert text == "global equity"
+    assert kw["limit"] == 15  # over-fetched to fill the page after exclusions
+    assert kw["num_candidates"] >= 15
+
+
 @pytest.mark.parametrize(
     "params",
     [

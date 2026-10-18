@@ -6,6 +6,7 @@ import { IconSearch } from "../components/Icons";
 import { Methodology } from "../components/Methodology";
 import { ResultList } from "../components/ResultList";
 import { SimpleFilters } from "../components/SimpleFilters";
+import { Understanding } from "../components/Understanding";
 import { TestSets } from "../components/TestSets";
 import { ErrorNote, Skeleton, Tabs } from "../components/ui";
 import { api, type Filters, type SearchSettings, type Sort } from "../lib/api";
@@ -39,7 +40,7 @@ const ORDER_NOTE: Record<Exclude<Sort, "auto">, { auto: string; chosen: string }
 export function SearchPage({ params }: { params: URLSearchParams }) {
   const meta = useMeta();
   const expert = useExpert();
-  const { q, sort, filters, settings } = readQuery(params);
+  const { q, sort, ignore, filters, settings } = readQuery(params);
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
   // The box is autofocused on load, so focus alone doesn't count as interacting.
@@ -47,13 +48,22 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
   const [focused, setFocused] = useState(false);
   const engaged = touched && (focused || draft.trim() !== "");
 
-  // A new query goes back to "auto" ordering; filter and setting changes keep the user's choice.
-  const go = (nextQ: string, f: Filters, s: SearchSettings, replace = false, o: Sort = "auto") =>
-    navigate(`/${writeQuery(nextQ.trim(), f, s, o)}`, { replace });
+  // A new query starts fresh (auto order, nothing ignored); filter, setting and
+  // order changes keep the user's other choices.
+  const go = (
+    nextQ: string,
+    f: Filters,
+    s: SearchSettings,
+    replace = false,
+    o: Sort = "auto",
+    ig: string[] = [],
+  ) => navigate(`/${writeQuery(nextQ.trim(), f, s, o, ig)}`, { replace });
+  const refine = (changes: { f?: Filters; s?: SearchSettings; o?: Sort; ig?: string[] }) =>
+    go(q, changes.f ?? filters, changes.s ?? settings, true, changes.o ?? sort, changes.ig ?? ignore);
 
-  const key = q ? JSON.stringify([q, sort, filters, settings]) : null;
+  const key = q ? JSON.stringify([q, sort, ignore, filters, settings]) : null;
   const { data, error, loading, retryIn, reload } = useRequest(key, (signal) =>
-    api.search(q, sort, filters, settings, signal),
+    api.search(q, sort, ignore, filters, settings, signal),
   );
   const orderNote = data ? ORDER_NOTE[data.sort][sort === "auto" ? "auto" : "chosen"] : "";
   const clusters = useRequest(expert ? "clusters" : null, (signal) => api.clusters(signal));
@@ -136,14 +146,23 @@ export function SearchPage({ params }: { params: URLSearchParams }) {
                   { value: "cost", label: "Lowest cost" },
                   { value: "cost_desc", label: "Highest cost" },
                 ]}
-                onChange={(o) => go(q, filters, settings, true, o)}
+                onChange={(o) => refine({ o })}
               />
             )}
           </header>
-          <SimpleFilters filters={filters} meta={meta} onChange={(f) => go(q, f, settings, true, sort)} />
+          {data?.interpretation && (
+            <Understanding
+              q={q}
+              interpretation={data.interpretation}
+              ignored={ignore}
+              onIgnore={(k) => refine({ ig: [...ignore, k] })}
+              onReset={() => refine({ ig: [] })}
+            />
+          )}
+          <SimpleFilters filters={filters} meta={meta} onChange={(f) => refine({ f })} />
           {expert && (
             <div className="expert-bar">
-              <SettingsFields settings={settings} meta={meta} onChange={(s) => go(q, filters, s, true, sort)} />
+              <SettingsFields settings={settings} meta={meta} onChange={(s) => refine({ s })} />
             </div>
           )}
           <div aria-live="polite">

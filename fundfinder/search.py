@@ -28,6 +28,8 @@ HIT_FIELDS = (
     "tracked_index",
     "cluster_id",
     "exposure_vector",
+    "sector_weights",
+    "region_weights",
 )
 
 
@@ -42,6 +44,8 @@ class Filters(BaseModel):
     ia_sector: str | None = None
     ocf_max: float | None = Field(default=None, ge=0)
     is_passive: bool | None = None
+    # Set by query understanding ("no bonds"), not exposed as a query parameter.
+    asset_class_nin: list[str] | None = None
 
     def to_mql(self) -> dict[str, Any] | None:
         clauses: list[dict[str, Any]] = []
@@ -53,6 +57,8 @@ class Filters(BaseModel):
             clauses.append({"ocf": {"$lte": self.ocf_max}})
         if self.is_passive is not None:
             clauses.append({"is_passive": {"$eq": self.is_passive}})
+        if self.asset_class_nin:
+            clauses.append({"asset_class": {"$nin": self.asset_class_nin}})
         if not clauses:
             return None
         return clauses[0] if len(clauses) == 1 else {"$and": clauses}
@@ -71,6 +77,9 @@ class Hit(BaseModel):
     cluster_id: str | None = None
     # Returned so clients can show why two funds look alike (26 floats).
     exposure_vector: list[float] | None = None
+    # Used server-side for exclusions ("not tech"); left out of responses.
+    sector_weights: dict[str, float] = Field(default_factory=dict, exclude=True)
+    region_weights: dict[str, float] = Field(default_factory=dict, exclude=True)
     score: float
     # Only in "both" mode: 1-based rank in each component list (None = absent).
     ranks: dict[str, int | None] | None = None

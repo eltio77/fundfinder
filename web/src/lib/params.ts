@@ -6,6 +6,8 @@ export const DEFAULT_LIMIT = 10;
 export function readQuery(params: URLSearchParams): {
   q: string;
   sort: Sort;
+  /** Understood-constraint keys the user removed (see SearchResponse.interpretation). */
+  ignore: string[];
   filters: Filters;
   settings: SearchSettings;
 } {
@@ -20,6 +22,7 @@ export function readQuery(params: URLSearchParams): {
   return {
     q: params.get("q") ?? "",
     sort: sort === "relevance" || sort === "cost" || sort === "cost_desc" ? sort : "auto",
+    ignore: params.getAll("ignore"),
     filters: {
       asset_class: params.get("asset_class") || undefined,
       ia_sector: params.get("ia_sector") || undefined,
@@ -39,10 +42,12 @@ export function writeQuery(
   filters: Filters,
   settings: SearchSettings,
   sort: Sort = "auto",
+  ignore: string[] = [],
 ): string {
   const p = new URLSearchParams();
   if (q) p.set("q", q);
   if (sort !== "auto") p.set("sort", sort);
+  for (const k of ignore) p.append("ignore", k);
   if (filters.asset_class) p.set("asset_class", filters.asset_class);
   if (filters.ia_sector) p.set("ia_sector", filters.ia_sector);
   if (filters.ocf_max !== undefined) p.set("ocf_max", String(filters.ocf_max));

@@ -15,3 +15,13 @@ describe("sort in the URL", () => {
     expect(readQuery(new URLSearchParams("q=x&sort=cost_desc")).sort).toBe("cost_desc");
   });
 });
+
+describe("ignored constraints in the URL", () => {
+  const settings = { limit: 10, numCandidates: null, exact: false };
+
+  it("round-trips repeated ignore keys", () => {
+    const url = writeQuery("index funds", {}, settings, "auto", ["is_passive", "not_region:UK"]);
+    expect(url).toBe("?q=index+funds&ignore=is_passive&ignore=not_region%3AUK");
+    expect(readQuery(new URLSearchParams(url)).ignore).toEqual(["is_passive", "not_region:UK"]);
+  });
+});

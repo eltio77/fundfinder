@@ -462,6 +462,62 @@ p {
   height: 9px;
 }
 
+/* What the search understood from the query: removable chips. */
+.understood {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 16px;
+}
+.understood-label {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+.understood-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 4px 3px 11px;
+  border-radius: 999px;
+  background: var(--green-wash);
+  color: var(--forest-deep);
+  font-size: 13px;
+  font-weight: 500;
+}
+.understood-chip button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.understood-chip button:hover,
+.understood-chip button:focus-visible {
+  background: color-mix(in srgb, var(--forest-deep) 14%, transparent);
+  opacity: 1;
+}
+.understood-reset {
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.understood-text {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
 /* ----------------------------------------------------------------- cards */
 
 .card {

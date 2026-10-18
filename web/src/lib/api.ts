@@ -17,11 +17,19 @@ export interface Hit {
   ranks: { text: number | null; exposure: number | null } | null;
 }
 
+/** One constraint the server read from the query; `key` goes back in `ignore`. */
+export interface Understood {
+  key: string;
+  label: string;
+}
+
 export interface SearchResponse {
   query: string | null;
   fund_id: string | null;
   mode: Mode | null;
   sort: Exclude<Sort, "auto">;
+  /** Only on /search: what was embedded and which constraints were applied. */
+  interpretation: { text: string; applied: Understood[] } | null;
   limit: number;
   num_candidates: number | null;
   exact: boolean;
@@ -100,12 +108,16 @@ export class ApiError extends Error {
   }
 }
 
-type Params = Record<string, string | number | boolean | null | undefined>;
+type Scalar = string | number | boolean | null | undefined;
+type Params = Record<string, Scalar | string[]>;
 
+/** Arrays become repeated keys (?ignore=a&ignore=b). */
 export function toQuery(params: Params): string {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+    for (const item of Array.isArray(v) ? v : [v]) {
+      if (item !== undefined && item !== null && item !== "") qs.append(k, String(item));
+    }
   }
   const s = qs.toString();
   return s ? `?${s}` : "";
@@ -150,13 +162,14 @@ export const api = {
   search: (
     q: string,
     sort: Sort,
+    ignore: string[],
     filters: Filters,
     settings: SearchSettings,
     signal?: AbortSignal,
   ) =>
     get<SearchResponse>(
       "/search",
-      { q, sort: sort === "auto" ? null : sort, ...searchParams(filters, settings) },
+      { q, sort: sort === "auto" ? null : sort, ignore, ...searchParams(filters, settings) },
       signal,
     ),
   similar: (
