@@ -1,10 +1,68 @@
 # Fund Finder
 
-Prototype similarity search over (synthetic) UK funds using MongoDB Atlas Vector Search.
+Find UK funds by describing them in plain English, or start from a fund and find others like it.
+A prototype over 300 synthetic funds, using MongoDB Atlas Vector Search with Voyage embeddings,
+plus an optional AI mode (Claude) that reads what you mean rather than what you typed.
 
-**How it works:** [docs/how-it-works.md](docs/how-it-works.md) explains the data, the two
-similarity methods, indexes, the request flow, rank fusion, cost ordering, evaluation and
-deployment.
+**Full walkthrough:** [docs/how-it-works.md](docs/how-it-works.md) explains the data, the two
+similarity methods, indexes, the request flow, rank fusion, query understanding, cost ordering,
+evaluation and deployment.
+
+## How search works
+
+```mermaid
+flowchart LR
+    Q["Your words<br/>“cheap well known Uk”"] --> R{"Interpret<br/>with AI?"}
+    R -->|"off (default)"| RULES["Rules<br/>explicit constraints only"]
+    R -->|on| AI["Claude<br/>typos, vague wording,<br/>implied indexes"]
+    RULES --> P["Search plan<br/>text to match · filters · exclusions · order"]
+    AI --> P
+    P --> VS["Atlas Vector Search<br/>Voyage embeds the text,<br/>finds the closest fund descriptions"]
+    VS --> F["Post-filters and ordering<br/>e.g. not mainly tech, cheapest first"]
+    F --> UI["Results + “Understood as” chips"]
+```
+
+1. **Read the query.** Constraints are separated from the description, so they act as real filters
+   rather than nudging the match:
+   - **Standard reading (default):** deterministic rules (`fundfinder/understanding.py`) pick out
+     explicit constraints:
+     - cost caps ("under 0.2%", "below 15bps")
+     - fund type ("index funds", "tracker", "actively managed")
+     - one asset class ("bonds", "property")
+     - negations ("not tech", "ex UK", "no bonds")
+     - cost order ("cheapest", "most expensive")
+
+     Places and themes such as "Japan" or "healthcare" are left to the match.
+   - **Interpret with AI (opt-in toggle):** Claude (`fundfinder/llm_intent.py`) reads the whole
+     query. It fixes typos, turns vague wording into fund language ("well known UK" means the
+     FTSE 100; "safe" points to gilts) and can pick the index you clearly mean. It returns the
+     same kind of plan plus a one-line summary of how it read you.
+2. **Match on meaning.** Atlas embeds the remaining descriptive text with Voyage `voyage-4` and
+   finds the funds whose descriptions are closest (approximate nearest neighbour search, with the
+   filters applied before ranking).
+3. **Finish.** Exclusions that can't be pre-filtered are applied: "not mainly tech" means funds
+   with 50% or more in tech, and "tracks the FTSE 100" keeps only those trackers. If you asked
+   about cost, the matches are then re-ordered by cost.
+4. **Show what was understood.** Each constraint appears as an **Understood as** chip. Remove one
+   to search again without it. Filters and an order you choose yourself always win.
+
+| You type | Standard reading | Interpret with AI |
+|---|---|---|
+| `index funds under 0.15% a year, not tech` | Index funds only · 0.15% or less · not mainly tech; searches "index funds" | Same constraints, shown cheapest first, plus a plain-English summary |
+| `funds under 0.1% in S&P` | 0.10% or less; searches "funds in S&P" (the S&P fund ranks first, then other cheap funds) | Tracks the S&P 500 · index funds · 0.10% or less: just the one matching fund |
+| `cheap well known Uk` | Cheapest first; searches the words as typed | Tracks the FTSE 100 · index funds · equity · cheapest first: the five FTSE 100 trackers |
+| `safe place for my savings` | No constraints; searches the words as typed | Searches for UK government bonds and money market funds |
+
+**Turning on AI search:** put `ANTHROPIC_API_KEY` in `.env` (or in your Vercel project settings).
+Without it the toggle shows as unavailable and everything else works as normal. The model
+defaults to `claude-haiku-5-5` (`INTENT_MODEL`).
+- **Speed:** a new query takes about 1.5–2 s, because Claude reads it first. Repeats, filter
+  changes and chip removals reuse a cached reading (about 0.2 s).
+- **Safety:** Claude's reply is checked against the values that exist in the data, so it can only
+  narrow a search to real options.
+- **Fallback:** if the call fails, search uses the standard reading and says so.
+- **Cost:** on a public deployment anyone can trigger calls on your key, so keep deployment
+  protection on.
 
 ## Local run
 
@@ -18,8 +76,8 @@ Automated Embedding) alongside the app. Embedding still calls Voyage, so put `VO
 `VOYAGE_EMBEDDING_PROVIDER_ENDPOINT=https://api.voyageai.com/v1/embeddings`.
 
 ```bash
-cp .env.example .env                                     # add VOYAGE_API_KEY
-docker compose up -d --build                             # mongo + app on http://localhost:8000
+cp .env.example .env                                     # add VOYAGE_API_KEY (+ ANTHROPIC_API_KEY for AI search)
+docker compose up -d                                     # mongo + app on http://localhost:8000 (rebuilds the app)
 docker compose run --rm app python -m scripts.seed
 docker compose run --rm app python -m scripts.indexes    # waits until READY
 ```
@@ -47,15 +105,22 @@ The app is designed for people who don't know fund jargon. The natural-language 
 centrepiece, set in a calm card layout (Geist; forest, cream, lilac and amber palette; light and
 dark themes).
 
-- **Search:** describe a fund in plain English. Results show the fund type, annual cost and a
-  plain-language match strength ("Strong", "Good" or "Loose" match). Filters are fund type, asset
-  type and cost. All state lives in the URL, so searches can be shared.
-- **How it works:** the three methods (description, holdings, combined) shown as coloured blocks.
+- **Search:** describe a fund in plain English.
+  - Results show the fund type, annual cost and a plain-language match strength ("Strong", "Good"
+    or "Loose" match).
+  - **Understood as** chips show the constraints read from your words; each can be removed.
+  - A **Best match / Lowest cost / Highest cost** switch sets the order.
+  - Filters are fund type, asset type and cost.
+  - The **Interpret with AI** toggle under the search box (off by default) switches to the AI
+    reading and adds its one-line summary.
+  - All state lives in the URL, so searches can be shared.
+- **How it works:** the three methods (description, holdings, combined) shown as coloured blocks,
+  then a step-by-step guide, how to read results, search tips and an FAQ.
 - **Fund page:** the key facts, what it says it does, what it invests in, its biggest holdings, and
   **Funds like this**. That list is the fused ranking, and each fund says why it matched:
   "Similar description and holdings" (top 10 of both methods), "Similar description" or "Similar
-  holdings". "How we found these" turns the same information into a gauge. "Only cheaper" limits
-  the list to lower-cost funds.
+  holdings". "How we found these" turns the same information into a gauge. "Only cheaper than"
+  limits the list to lower-cost funds and shows them cheapest first.
 - **Expert mode** (switch in the top bar, remembered per browser) adds the technical layer:
   - scores, ranks and exposure fingerprints
   - limit, numCandidates and ANN/exact settings
@@ -133,9 +198,9 @@ OpenAPI schema at `/openapi.json`.
 | Endpoint | Notes |
 |---|---|
 | `GET /health` | Pings Mongo; 503 if unreachable |
-| `GET /search?q=...` | Semantic search on `profile_auto` |
+| `GET /search?q=...` | Plain-English search: reads constraints, then semantic search on `profile_auto` |
 | `GET /funds/{id}` | Fund document |
-| `GET /meta` | Filter facets, exposure-vector layout, defaults |
+| `GET /meta` | Filter facets, exposure-vector layout, defaults, whether AI search is available |
 | `GET /clusters` | Synthetic test clusters and their members |
 | `GET /funds/{id}/similar?mode=text\|exposure\|both` | Neighbours of a fund, excluding itself |
 
@@ -148,28 +213,24 @@ max 10,000), `exact` (ENN instead of ANN), and filters `asset_class`, `ia_sector
 - `both` runs the two concurrently, each `2 x limit` deep, and fuses them with reciprocal rank
   fusion (k=60). Results then include each fund's `ranks` in the two lists.
 
-`/search` also takes `sort=auto|relevance|cost|cost_desc` (default `auto`). Similarity can't
-rank by price, so with `auto` a query that asks for low cost ("low cost", "lowest-cost", "low
-fees", "cheap", "cheapest", ...) gets its matches re-ordered by ascending OCF, and one that asks
-for high cost ("high cost", "highest cost", "higher fees", "most expensive", "priciest", ...)
-by descending OCF. Only the top `limit`
-matches are re-ordered: they're still the most relevant funds, shown cheapest first. "Low risk",
-"high yield" and similar don't trigger it. The response's `sort` says which order was used.
+`/search` also takes these parameters (see [How search works](#how-search-works)):
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `intent` | `rules` | `llm` for Interpret with AI. Returns 503 if `ANTHROPIC_API_KEY` isn't set |
+| `sort` | `auto` | `relevance`, `cost` (cheapest first) or `cost_desc`. With `auto`, the order follows the query: wording like "cheapest" or "most expensive" (rules), or Claude's reading (`llm`). Only the top `limit` matches are re-ordered |
+| `ignore` | none | Repeatable. Keys from `interpretation.applied` to drop, e.g. `is_passive` or `not_sector:Information Technology` |
+| `interpret` | `true` | `false` searches the raw text with no reading at all |
+
+The response's `interpretation` reports:
+- `source`: `rules` or `llm`
+- `text`: the text that was embedded
+- `applied`: the constraints used, as `{key, label}`
+- `summary`: AI only, a plain-English summary of the reading
+- `notice`: set if the AI reading fell back to the rules
+
 `/funds/{id}/similar` accepts `sort=relevance|cost|cost_desc` too; the fund page's "Only cheaper
 than" toggle uses `sort=cost`.
-
-Before searching, `/search` also reads constraints from `q`: cost caps ("under 0.2%"), fund type
-("index funds", "actively managed"), a single asset class ("bonds") and negations ("not tech",
-"ex UK", "no bonds"). These become filters or exclusions, and negations are removed from the text
-that gets embedded. The response's `interpretation` lists what was applied; pass keys in `ignore`
-to drop them, or `interpret=false` to turn this off. See
-[docs/how-it-works.md](docs/how-it-works.md#step-1-query-understanding).
-
-With `intent=llm` (the app's **Interpret with AI** toggle, off by default), Claude reads the query
-instead: it fixes typos and turns vague wording into fund language, so "cheap well known Uk"
-becomes FTSE 100 index trackers, cheapest first. The response adds a plain-English `summary`.
-This needs `ANTHROPIC_API_KEY`. If the call fails, search falls back to the standard reading and
-says so in `interpretation.notice`.
 
 The fund itself is excluded by requesting `limit + 1` and dropping it. Scores are Atlas
 `vectorSearchScore`, so cosine is reported as `(1 + cos) / 2`; in `both` mode the score is the RRF
