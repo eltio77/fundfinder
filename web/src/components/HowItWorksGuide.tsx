@@ -67,7 +67,7 @@ const FAQ = [
   },
   {
     q: "Where does the data come from?",
-    a: "The 300 funds here are made up (synthetic) for this prototype. Names, providers, costs and holdings are invented, but realistic for UK funds.",
+    a: "Real UK funds (Open Ended Investment Companies) from Morningstar: names, providers, costs, objectives, top holdings and how each fund splits across sectors, regions and asset types. One share class is shown per fund.",
   },
 ];
 

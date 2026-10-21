@@ -67,7 +67,7 @@ export function App() {
             </main>
 
             <footer className="foot">
-              <span>Prototype with synthetic data. Not investment information or advice.</span>
+              <span>Prototype using Morningstar fund data. Not investment information or advice.</span>
             </footer>
           </div>
         </div>

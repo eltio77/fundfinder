@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     mongodb_uri: SecretStr | None = None
     mongodb_db: str = "fund_finder"
     mongodb_timeout_ms: int = 5000
+    # Which fund universe the app searches: "funds_morningstar" (real funds,
+    # scripts/seed_morningstar.py) or "funds" (synthetic, scripts/seed.py).
+    funds_collection: str = "funds_morningstar"
 
     # Voyage model for the autoEmbed index and query-time embedding. Embedding runs
     # inside mongot (Atlas or local), so the app itself never holds a Voyage key.

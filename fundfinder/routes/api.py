@@ -7,7 +7,7 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel, Field
 
-from fundfinder.db import FUNDS, get_db
+from fundfinder.db import get_db
 from fundfinder.intent import Sort, resolve_sort
 from fundfinder.llm_intent import LlmInterpreter, LlmUnavailable, Vocabulary
 from fundfinder.ratelimit import limit_llm, limit_search
@@ -54,7 +54,7 @@ async def get_vocabulary(request: Request, search: FundSearch) -> Vocabulary:
 
 def get_search(request: Request) -> FundSearch:
     settings = request.app.state.settings
-    coll = get_db(request)[FUNDS]
+    coll = get_db(request)[settings.funds_collection]
     return FundSearch(coll, settings.embed_model)
 
 

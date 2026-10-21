@@ -1,7 +1,7 @@
 """Create or update the vector search indexes, then wait until they're queryable.
 Idempotent; run after seeding (the collection must exist).
 
-    uv run python -m scripts.indexes [--no-wait]
+    uv run python -m scripts.indexes [--no-wait] [--collection funds_morningstar]
 """
 
 import argparse
@@ -9,15 +9,15 @@ import asyncio
 import sys
 
 from fundfinder.config import get_settings
-from fundfinder.db import FUNDS, make_client
+from fundfinder.db import make_client
 from fundfinder.indexes import ensure_indexes, index_definitions, wait_until_ready
 
 
-async def run(wait: bool, timeout_s: float) -> int:
+async def run(wait: bool, timeout_s: float, collection: str | None) -> int:
     settings = get_settings()
     client = make_client(settings)
     try:
-        coll = client[settings.mongodb_db][FUNDS]
+        coll = client[settings.mongodb_db][collection or settings.funds_collection]
         actions = await ensure_indexes(coll, settings.embed_model)
         for name, action in actions.items():
             print(f"{name}: {action}")
@@ -46,8 +46,11 @@ def main() -> int:
     parser.add_argument(
         "--timeout", type=float, default=1800, help="seconds to wait (default 1800)"
     )
+    parser.add_argument("--collection", help="default: FUNDS_COLLECTION (funds_morningstar)")
     args = parser.parse_args()
-    return asyncio.run(run(wait=not args.no_wait, timeout_s=args.timeout))
+    return asyncio.run(
+        run(wait=not args.no_wait, timeout_s=args.timeout, collection=args.collection)
+    )
 
 
 if __name__ == "__main__":

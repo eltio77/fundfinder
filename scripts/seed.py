@@ -1,6 +1,7 @@
-"""Load the fund universe into Atlas. Idempotent: upserts every fund and removes
-any fund no longer in the source. Never drops the collection, so search indexes
-survive a re-seed (autoEmbed re-embeds only changed profiles).
+"""Load the synthetic fund universe into Atlas (the `funds` collection). Idempotent:
+upserts every fund and removes any fund no longer in the source. Never drops the
+collection, so search indexes survive a re-seed (autoEmbed re-embeds only changed
+profiles).
 
     uv run python -m scripts.seed [--n 300] [--seed 42] [--dry-run]
 """
@@ -34,10 +35,15 @@ def summarise(docs: list[dict]) -> str:
 async def seed(source: FundSource) -> None:
     docs = [to_document(f) for f in source.fetch()]
     print(summarise(docs))
+    await write(docs, FUNDS)
+
+
+async def write(docs: list[dict], collection: str) -> None:
+    """Upsert `docs` into `collection` and remove any fund not among them."""
     settings = get_settings()
     client = make_client(settings)
     try:
-        coll = client[settings.mongodb_db][FUNDS]
+        coll = client[settings.mongodb_db][collection]
         result = await coll.bulk_write(
             [ReplaceOne({"_id": d["_id"]}, d, upsert=True) for d in docs]
         )

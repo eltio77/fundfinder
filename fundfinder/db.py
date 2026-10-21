@@ -5,6 +5,7 @@ from pymongo.asynchronous.database import AsyncDatabase
 from fundfinder.config import Settings
 
 FUNDS = "funds"
+MORNINGSTAR_FUNDS = "funds_morningstar"
 
 
 NOT_CONFIGURED = "database not configured: set MONGODB_URI"

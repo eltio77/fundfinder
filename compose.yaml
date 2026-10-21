@@ -32,6 +32,8 @@ services:
     environment:
       PORT: "8000"
       MONGODB_URI: mongodb://mongo:27017/?directConnection=true
+      # funds_morningstar (real; see README) or funds (synthetic).
+      FUNDS_COLLECTION: ${FUNDS_COLLECTION:-funds_morningstar}
     ports:
       - "127.0.0.1:8000:8000"
     # /health pings Mongo (503 when unreachable). The slim image has no curl.

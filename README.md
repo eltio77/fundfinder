@@ -1,7 +1,8 @@
 # Fund Finder
 
 Find UK funds by describing them in plain English, or start from a fund and find others like it.
-A prototype over 300 synthetic funds, using MongoDB Atlas Vector Search with Voyage embeddings,
+A prototype over real UK funds (Open Ended Investment Companies from Morningstar), using MongoDB
+Atlas Vector Search with Voyage embeddings,
 plus an optional AI mode (Claude) that reads what you mean rather than what you typed.
 
 **Full walkthrough:** [docs/how-it-works.md](docs/how-it-works.md) explains the data, the two
@@ -82,7 +83,7 @@ Automated Embedding) alongside the app. Embedding still calls Voyage, so put `VO
 ```bash
 cp .env.example .env                                     # add VOYAGE_API_KEY (+ ANTHROPIC_API_KEY for AI search)
 docker compose up -d                                     # mongo + app on http://localhost:8000 (rebuilds the app)
-docker compose run --rm app python -m scripts.seed
+docker compose run --rm app python -m scripts.seed_morningstar --all   # real funds; scripts.seed for synthetic
 docker compose run --rm app python -m scripts.indexes    # waits until READY
 ```
 
@@ -99,6 +100,31 @@ cd web && npm run dev                           # UI on http://localhost:5173, p
 
 To point the API or scripts at the local Docker Mongo instead of Atlas, prefix commands with
 `MONGODB_URI="mongodb://localhost:27017/?directConnection=true"`.
+
+### Real funds from Morningstar (the default)
+
+The app searches the `funds_morningstar` collection unless `FUNDS_COLLECTION` says otherwise.
+`scripts/seed_morningstar.py` fills it with real UK funds. It walks Morningstar's security
+list, keeps Open Ended Investment Companies that have an IA sector, then fetches each one's
+snapshot by SEDOL. It keeps one share class per fund and spreads its picks across IA sectors.
+`--all` loads every fund; without it the run stops at 300 (`--limit`). The mapping lives in
+`fundfinder/data/morningstar.py`.
+
+```bash
+uv run python -m scripts.seed_morningstar --all --cache .cache/morningstar   # --dry-run to preview
+uv run python -m scripts.indexes
+```
+
+The synthetic universe (below) lives in the `funds` collection. Search it with
+`FUNDS_COLLECTION=funds`.
+
+Some fields are approximations:
+
+- Morningstar's 11 equity sectors stand in for the GICS sectors.
+- "Passive" is read from the fund name (index, tracker, ETF), since the snapshot has no
+  index flag.
+- Real funds have no evaluation clusters, so `scripts/eval.py` still runs on the synthetic
+  data only.
 
 ## Frontend
 
@@ -142,8 +168,8 @@ cd web && npm run typecheck && npm test && npm run build
 
 ## Data and seeding
 
-There is no real vendor data. `fundfinder/data/synthetic.py` generates a deterministic universe of
-300 UK funds (fictional providers, made-up weights). The clusters below are built in deliberately,
+Besides the real Morningstar funds (above), `fundfinder/data/synthetic.py` generates a
+deterministic universe of 300 UK funds (fictional providers, made-up weights). The clusters below are built in deliberately,
 for evaluation, and labelled with `cluster_id`:
 
 | Kind | `cluster_id` | Members |
