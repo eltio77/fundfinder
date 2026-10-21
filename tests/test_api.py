@@ -143,8 +143,8 @@ def test_search_exclusions_drop_mainly_matching_funds(client, fake):
     assert "sector_weights" not in body["results"][0]  # internal only
     _, text, kw = fake.calls[0]
     assert text == "global equity"
-    assert kw["limit"] == 15  # over-fetched to fill the page after exclusions
-    assert kw["num_candidates"] >= 15
+    assert kw["limit"] == 200  # fetched deep to fill the page after exclusions
+    assert kw["num_candidates"] >= 200
 
 
 def us_tech(fid: str) -> Hit:
@@ -153,17 +153,16 @@ def us_tech(fid: str) -> Hit:
     return hit
 
 
-def test_search_exclusions_look_deeper_when_the_page_is_short(client, fake):
+def test_search_exclusions_fetch_deep_in_one_pass(client, fake):
     async def search_text(q, **kw):
         fake.calls.append(("search", q, kw))
         hits = [us_tech(f"T{i}") for i in range(kw["limit"])]
-        if kw["limit"] > 15:  # only the deep pass reaches the non-US fund
-            hits[-1] = make_hit("EU1")
+        hits[-1] = make_hit("EU1")  # the only non-US fund is far down the list
         return hits
 
     fake.search_text = search_text
     body = client.get("/search", params={"q": "tech but not US", "limit": 5}).json()
-    assert [c[2]["limit"] for c in fake.calls] == [15, 200]
+    assert [c[2]["limit"] for c in fake.calls] == [200]  # one search, one embedding
     assert [h["id"] for h in body["results"]] == ["EU1"]
     assert body["interpretation"]["notice"] is None
 
@@ -171,7 +170,7 @@ def test_search_exclusions_look_deeper_when_the_page_is_short(client, fake):
 def test_search_explains_when_exclusions_leave_nothing(client, fake):
     async def search_text(q, **kw):
         fake.calls.append(("search", q, kw))
-        return [us_tech("T1"), us_tech("T2")]  # fewer than asked: no deeper pass
+        return [us_tech("T1"), us_tech("T2")]
 
     fake.search_text = search_text
     body = client.get("/search", params={"q": "tech but not US"}).json()
@@ -278,6 +277,41 @@ def test_search_llm_failure_falls_back_to_rules(fake):
     assert body["interpretation"]["source"] == "rules"
     assert "unavailable" in body["interpretation"]["notice"]
     assert fake.calls[0][2]["filters"].ocf_max == 0.2
+
+
+def test_search_repeats_are_served_from_cache(client, fake):
+    first = client.get("/search", params={"q": "uk dividend"})
+    second = client.get("/search", params={"q": "uk dividend"})
+    assert second.json()["results"] == first.json()["results"]
+    assert len(fake.calls) == 1  # embedded once
+    assert "s-maxage" in second.headers["cache-control"]
+
+    # Anything that changes the results is a different entry.
+    client.get("/search", params={"q": "uk dividend", "ocf_max": 0.5})
+    client.get("/search", params={"q": "uk dividend", "sort": "cost"})
+    client.get("/search", params={"q": "uk dividend", "ignore": ["any_of"]})
+    assert len(fake.calls) == 4
+
+
+def test_search_errors_are_not_cached(client, fake):
+    fake.fail = "embedding rate limit exceeded"
+    assert client.get("/search", params={"q": "uk dividend"}).status_code == 429
+    fake.fail = None
+    assert client.get("/search", params={"q": "uk dividend"}).status_code == 200
+    assert len(fake.calls) == 1
+
+
+def test_search_llm_results_are_never_cached(fake):
+    async def facets():
+        return {"asset_classes": [], "ia_sectors": [], "tracked_indexes": []}
+
+    fake.facets = facets
+    llm = FakeLlm()
+    with _llm_client(fake, llm) as c:
+        for _ in range(2):
+            r = c.get("/search", params={"q": "cheap well known Uk", "intent": "llm"})
+            assert r.headers["cache-control"] == "private, no-store"
+    assert len(fake.calls) == 2
 
 
 def test_search_llm_not_configured(client):

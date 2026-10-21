@@ -115,6 +115,9 @@ uv run python -m scripts.seed_morningstar --all --cache .cache/morningstar   # -
 uv run python -m scripts.indexes
 ```
 
+Standard searches are cached for up to 10 minutes, in the API and on Vercel's CDN, so results
+from a re-seed can take that long to show; restarting or redeploying the app clears the API cache.
+
 The synthetic universe (below) lives in the `funds` collection. Search it with
 `FUNDS_COLLECTION=funds`.
 

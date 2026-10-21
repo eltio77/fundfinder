@@ -1,12 +1,14 @@
 import asyncio
+import json
 import logging
 import time
 from enum import StrEnum
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 from pydantic import BaseModel, Field
 
+from fundfinder.cache import TTLCache
 from fundfinder.db import get_db
 from fundfinder.intent import Sort, resolve_sort
 from fundfinder.llm_intent import LlmInterpreter, LlmUnavailable, Vocabulary
@@ -93,13 +95,20 @@ def get_params(
 
 
 # With exclusions ("not tech") results are dropped after the search, so fetch
-# more to still fill the page. If that still leaves the page short, look much
-# deeper once: "tech but not US" must get past every US-heavy tech fund.
-EXCLUSION_OVERFETCH = 3
+# deep enough in one pass to still fill the page: "tech but not US" must get past
+# every US-heavy tech fund. One deep pass costs about the same as a shallow one,
+# whereas a second pass would embed the query again.
+EXCLUSION_FETCH = 200
+# Standard-reading searches are deterministic, so the CDN may serve repeats for 10
+# minutes (and a stale copy while refreshing). AI readings vary and cost money per
+# call, so they're never cached at the edge.
+CACHEABLE = "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+NOT_CACHEABLE = "private, no-store"
+
+
 # Chip key for searching each side of "A or B" separately; pass in `ignore` to search
 # the text as one.
 ANY_OF = "any_of"
-EXCLUSION_DEEP_FETCH = 200
 
 
 def _exclusion_rules(
@@ -169,6 +178,14 @@ class SearchResponse(BaseModel):
     results: list[Hit]
 
 
+def get_search_cache(request: Request) -> TTLCache[SearchResponse]:
+    """One cache per app, created on first use."""
+    cache = getattr(request.app.state, "search_cache", None)
+    if cache is None:
+        cache = request.app.state.search_cache = TTLCache()
+    return cache
+
+
 def _response(params: SearchParams, filters: Filters, started: float, **kw) -> SearchResponse:
     return SearchResponse(
         limit=params.limit,
@@ -187,6 +204,7 @@ def _response(params: SearchParams, filters: Filters, started: float, **kw) -> S
 )
 async def search(
     request: Request,
+    response: Response,
     q: Annotated[
         str,
         Query(
@@ -199,6 +217,7 @@ async def search(
     search: Annotated[FundSearch, Depends(get_search)],
     filters: Annotated[Filters, Depends(get_filters)],
     params: Annotated[SearchParams, Depends(get_params)],
+    cache: Annotated[TTLCache[SearchResponse], Depends(get_search_cache)],
     sort: Annotated[
         Sort,
         Query(
@@ -229,10 +248,27 @@ async def search(
     """Semantic search. Constraints in `q` ("under 0.2%", "index funds", "not tech")
     become filters; Atlas embeds the rest with Voyage and searches `profile_auto`."""
     started = time.perf_counter()
+    uses_llm = intent is Intent.llm and interpret
+    response.headers["Cache-Control"] = NOT_CACHEABLE if uses_llm else CACHEABLE
+    cache_key = json.dumps(
+        [
+            request.app.state.settings.funds_collection,
+            q,
+            sort,
+            interpret,
+            ignore,
+            filters.model_dump(),
+            params.model_dump(),
+        ]
+    )
+    if not uses_llm and (cached := cache.get(cache_key)) is not None:
+        return cached.model_copy(
+            update={"took_ms": round((time.perf_counter() - started) * 1000, 1)}
+        )
     source: Literal["rules", "llm"] = "rules"
     summary = notice = None
     llm_sort: Sort | None = None
-    if intent is Intent.llm and interpret:
+    if uses_llm:
         if llm is None:
             raise HTTPException(503, "AI interpretation is not configured: set ANTHROPIC_API_KEY")
         limit_llm(request)
@@ -287,19 +323,14 @@ async def search(
             if not exclusions.excludes(h.sector_weights, h.region_weights, h.tracked_index)
         ]
 
-    fetch = params.limit * EXCLUSION_OVERFETCH if exclusions else params.limit
-    found = await fetch_hits(fetch)
+    found = await fetch_hits(max(EXCLUSION_FETCH, params.limit) if exclusions else params.limit)
     hits = kept(found) if exclusions else found
-    # Short page, and the search had more to give: look deeper once.
-    if exclusions and len(hits) < params.limit and len(found) == fetch < EXCLUSION_DEEP_FETCH:
-        found = await fetch_hits(EXCLUSION_DEEP_FETCH)
-        hits = kept(found)
     if exclusions and not hits:
         notice = " ".join(filter(None, [notice, _empty_notice(found, exclusions, applied)]))
     hits = hits[: params.limit]
     order = llm_sort if sort is Sort.auto and llm_sort else resolve_sort(sort, q)
     order_by(hits, order)
-    return _response(
+    result = _response(
         params,
         effective,
         started,
@@ -315,6 +346,9 @@ async def search(
         ),
         results=hits,
     )
+    if not uses_llm:
+        cache.set(cache_key, result)
+    return result
 
 
 @router.get(
